@@ -1,0 +1,38 @@
+import json
+from pathlib import Path
+
+from dataset import DezfouliDataset
+
+# ---------------------------- Configuration ----------------------------
+config_rdir = Path(r"../../config/unittest")
+# ------------------------------------------------------------------------
+
+print("Dezfouli Dataset - Unit test:")
+
+print("Loading dataset...")
+with open(config_rdir / "unittest_DezfouliDataset.json", "r") as f:
+    dataset_config = json.load(f)
+dataset = DezfouliDataset(**dataset_config)
+print("Done!")
+print()
+
+print("Basic information:")
+print(f"Source Path: {dataset._src_path}; Mode: {dataset._mode}")
+print()
+
+print("Original data:")
+print(dataset._original_data)
+print()
+
+print("Function test: ")
+
+print("Get Length:")
+print(len(dataset))
+print("Done!")
+print()
+
+print("Get Item:")
+sample_item = dataset[0]
+print(f"Input shape:{sample_item[0].shape}; Output shape:{sample_item[1].shape}; Mask shape:{sample_item[2].shape}.")
+print("Done!")
+print()
