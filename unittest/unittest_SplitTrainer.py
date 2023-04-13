@@ -4,14 +4,17 @@ from pathlib import Path
 
 import torch
 
-from trainer import SplitTrainer
 from dataset import DezfouliDataset
+from trainer import SplitTrainer
+from utils import to_rdir
+
+to_rdir()
 
 # ---------------------------- Configuration ----------------------------
 torch_seed = 20230310
-config_rdir = Path(r"../../config/unittest")
-tensorboard_rdir = Path(r"../../tensorboard/unittest_SplitTrainer")
-save_rdir = Path(r"../../save/unittest_SplitTrainer")
+config_rdir = Path(r"config/unittest")
+tensorboard_rdir = Path(r"tensorboard/unittest_SplitTrainer")
+save_rdir = Path(r"save/unittest_SplitTrainer")
 # ------------------------------------------------------------------------
 
 print(f"Split Trainer - Unit test:")

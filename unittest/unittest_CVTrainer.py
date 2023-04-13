@@ -4,14 +4,17 @@ from pathlib import Path
 
 import torch
 
-from trainer import CVTrainer
 from dataset import DezfouliDataset
+from trainer import CVTrainer
+from utils import to_rdir
+
+to_rdir()
 
 # ---------------------------- Configuration ----------------------------
 torch_seed = 20230310
-config_rdir = Path(r"../../config/unittest")
-tensorboard_rdir = Path(r"../../tensorboard/unittest_CVTrainer")
-save_rdir = Path(r"../../save/unittest_CVTrainer")
+config_rdir = Path(r"config/unittest")
+tensorboard_rdir = Path(r"tensorboard/unittest_CVTrainer")
+save_rdir = Path(r"save/unittest_CVTrainer")
 # ------------------------------------------------------------------------
 
 print(f"CV Trainer - Unit test:")

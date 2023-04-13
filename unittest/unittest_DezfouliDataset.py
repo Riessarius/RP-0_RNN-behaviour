@@ -2,9 +2,12 @@ import json
 from pathlib import Path
 
 from dataset import DezfouliDataset
+from utils import to_rdir
+
+to_rdir()
 
 # ---------------------------- Configuration ----------------------------
-config_rdir = Path(r"../../config/unittest")
+config_rdir = Path(r"config/unittest")
 # ------------------------------------------------------------------------
 
 print("Dezfouli Dataset - Unit test:")

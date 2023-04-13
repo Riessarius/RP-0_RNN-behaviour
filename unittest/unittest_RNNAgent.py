@@ -7,13 +7,16 @@ from torch.utils.data import random_split
 
 from agent import RNNAgent
 from dataset import DezfouliDataset
+from utils import to_rdir
+
+to_rdir()
 
 # ---------------------------- Configuration ----------------------------
 torch_seed = 20230307
 test_ratio = 0.2
-config_rdir = Path(r"../../config/unittest")
-tensorboard_rdir = Path(r"../../tensorboard/unittest_RNNAgent")
-save_rdir = Path(r"../../save/unittest_RNNAgent")
+config_rdir = Path(r"config/unittest")
+tensorboard_rdir = Path(r"tensorboard/unittest_RNNAgent")
+save_rdir = Path(r"save/unittest_RNNAgent")
 # ------------------------------------------------------------------------
 
 print("RNN Agent - Unit test:")

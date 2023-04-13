@@ -4,15 +4,18 @@ from pathlib import Path
 
 import torch
 
+from dataset import DezfouliDataset
 from investigator import RNNInvestigator
 from trainer import CVTrainer
-from dataset import DezfouliDataset
+from utils import to_rdir
+
+to_rdir()
 
 # ---------------------------- Configuration ----------------------------
 torch_seed = 20230331
-config_rdir = Path(r"../../config/unittest")
-tensorboard_rdir = Path(r"../../tensorboard/unittest_RNNInvestigator")
-save_rdir = Path(r"../../save/unittest_RNNInvestigator")
+config_rdir = Path(r"config/unittest")
+tensorboard_rdir = Path(r"tensorboard/unittest_RNNInvestigator")
+save_rdir = Path(r"save/unittest_RNNInvestigator")
 # ------------------------------------------------------------------------
 
 print(f"RNN Investigator - Unit test:")
