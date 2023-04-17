@@ -2,9 +2,9 @@ from pathlib import Path
 from typing import Optional
 
 from sklearn.model_selection import train_test_split
-from torch.utils.data import Dataset, Subset
 
 import agent
+from dataset import Dataset
 from .Trainer import Trainer
 
 
@@ -71,14 +71,15 @@ class SplitTrainer(Trainer):
         }
 
         train_indices, test_indices = train_test_split(range(len(dataset)), test_size = test_ratio, shuffle = shuffle, random_state = random_state)
+
         if verbose_level >= 1:
             print(f"Random split: Train size: {len(train_indices)}; Test size: {len(test_indices)}.")
 
         agent_model_config["args"]["name"] = self._name
         agent_model_config["args"]["tensorboard_rdir"] = tensorboard_rdir
         ag = agent.FromString(agent_model_config["class"])(**agent_model_config["args"])
-        train_set = Subset(dataset, train_indices)
-        test_set = Subset(dataset, test_indices)
+        train_set = dataset.subset(train_indices)
+        test_set = dataset.subset(test_indices)
         ag.train(train_set, test_set, **agent_training_config)
         self._agents.append(ag)
 

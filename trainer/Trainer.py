@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import json
 import jsbeautifier
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from agent import Agent
 
@@ -24,8 +24,6 @@ class Trainer(ABC):
     -------
     train(...) -> None
         Train the agent.
-    get_agents(...) -> List[Agent]
-        Get the agents.
     save(save_rdir: Path, *args, **kwargs) -> None
         Save the configuration and generated agents.
 
@@ -39,6 +37,9 @@ class Trainer(ABC):
         self._agents = []
         self._configs = []
         pass
+
+    def __getitem__(self, idx: int) -> Tuple[Agent, dict]:
+        return self._agents[idx], self._configs[idx]
 
     @abstractmethod
     def train(self, *args, **kwargs) -> None:
@@ -55,18 +56,6 @@ class Trainer(ABC):
         """
 
         pass
-
-    def get_agents(self, *args, **kwargs) -> List[Agent]:
-        """
-        Get the agents.
-
-        Returns
-        -------
-        List[Agent]
-            The agents.
-        """
-
-        return self._agents
 
     def save(self, save_rdir: Path, *args, **kwargs):
         """
@@ -86,8 +75,9 @@ class Trainer(ABC):
         trainer_dir.mkdir(parents = True, exist_ok = True)
         for i, (ag, cfg) in enumerate(zip(self._agents, self._configs)):
             ag.save(trainer_dir)
-            config_path = trainer_dir / f"trainer_config_{ag.get_name()}.json"
-            with config_path.open("w") as f:
+
+            cfg_path = trainer_dir / f"{self._name}_{i}_config.json"
+            with cfg_path.open("w") as f:
                 opts = jsbeautifier.default_options()
                 opts.indent_size = 4
                 f.write(jsbeautifier.beautify(json.dumps(cfg), opts))

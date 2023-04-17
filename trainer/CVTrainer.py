@@ -2,9 +2,9 @@ from pathlib import Path
 from typing import Optional
 
 from sklearn.model_selection import KFold
-from torch.utils.data import Dataset, Subset
 
 import agent
+from dataset import Dataset
 from .Trainer import Trainer
 
 
@@ -78,8 +78,8 @@ class CVTrainer(Trainer):
             agent_model_config["args"]["name"] = self._name + f"_Fold{f}"
             agent_model_config["args"]["tensorboard_rdir"] = tensorboard_rdir
             ag = agent.FromString(agent_model_config["class"])(**agent_model_config["args"])
-            train_set = Subset(dataset, train_indices)
-            test_set = Subset(dataset, test_indices)
+            train_set = dataset.subset(train_indices)
+            test_set = dataset.subset(test_indices)
             ag.train(train_set, test_set, **agent_training_config)
             self._agents.append(ag)
 
