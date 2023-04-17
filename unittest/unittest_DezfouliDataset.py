@@ -39,3 +39,9 @@ sample_item = dataset[0]
 print(f"Input shape:{sample_item[0].shape}; Output shape:{sample_item[1].shape}; Mask shape:{sample_item[2].shape}.")
 print("Done!")
 print()
+
+print("Get Subset:")
+subset = dataset.subset(list(range(100)))
+print(f"Subset length: {len(subset)}")
+print("Done!")
+print()

@@ -1,13 +1,15 @@
-from collections.abc import Sized
+from copy import deepcopy
 from typing import List, Tuple, Union
 
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import Dataset
+from torch.utils import data as torch_data
+
+from dataset import Dataset
 
 
-class DezfouliDataset(Dataset, Sized):
+class DezfouliDataset(Dataset, torch_data.Dataset):
     def __init__(self, src_path: str, mode: str = "prediction") -> None:
         super().__init__()
         self._src_path = src_path
@@ -18,8 +20,15 @@ class DezfouliDataset(Dataset, Sized):
     def __len__(self) -> int:
         return self.input.shape[0]
 
-    def __getitem__(self, idx: Union[int, List[int]]) -> Tuple[torch.tensor, torch.tensor, torch.tensor]:
+    def __getitem__(self, idx: int) -> Tuple[torch.tensor, torch.tensor, torch.tensor]:
         return self.input[idx], self.output[idx], self.mask[idx]
+
+    def subset(self, idx: Union[List[int], np.ndarray]) -> "DezfouliDataset":
+        result = deepcopy(self)
+        result.input = result.input[idx]
+        result.output = result.output[idx]
+        result.mask = result.mask[idx]
+        return result
 
     def _load_original_data(self) -> pd.DataFrame:
         raw = pd.read_csv(self._src_path).groupby(["ID", "block"]).agg(list)
