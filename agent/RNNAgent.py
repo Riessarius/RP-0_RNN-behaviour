@@ -4,7 +4,7 @@ from typing import Any, Optional, Tuple
 
 import torch
 from torch import nn, optim
-from torch.utils.data import DataLoader, Dataset
+from torch.utils import data as torch_data
 from torch.utils.tensorboard import SummaryWriter
 
 from .Agent import Agent
@@ -59,7 +59,7 @@ class RNNAgent(Agent):
             "output_dim": output_dim
         }
 
-    def train(self, train_set: Dataset, test_set: Dataset,
+    def train(self, train_set: torch_data.Dataset, test_set: torch_data.Dataset,
               device: str = "cpu", batch_size: Optional[int] = None, n_epochs: int = 100,
               criterion: str = "CrossEntropy", optimizer: str = "SGD", lr: float = 0.01, weight_decay: float = 0.01,
               verbose_level: int = 0, *args, **kwargs) -> None:
@@ -69,9 +69,9 @@ class RNNAgent(Agent):
 
         Parameters
         ----------
-        train_set : Dataset
+        train_set : torch_data.Dataset
             The training set.
-        test_set : Dataset
+        test_set : torch_data.Dataset
             The test set.
         device : str, optional
             The device to use. Default is "cpu".
@@ -127,8 +127,8 @@ class RNNAgent(Agent):
 
         model = self._model.to(device)
         best_loss = float("inf")
-        train_loader = DataLoader(train_set, batch_size = batch_size, shuffle = False)
-        test_loader = DataLoader(test_set, batch_size = len(test_set), shuffle = False)
+        train_loader = torch_data.DataLoader(train_set, batch_size = batch_size, shuffle = False)
+        test_loader = torch_data.DataLoader(test_set, batch_size = len(test_set), shuffle = False)
 
         for e in range(n_epochs):
             model.train()
@@ -182,13 +182,13 @@ class RNNAgent(Agent):
         if writer is not None:
             writer.close()
 
-    def predict(self, pred_set: Dataset, *args, **kwargs) -> torch.tensor:
+    def predict(self, pred_set: torch_data.Dataset, *args, **kwargs) -> torch.tensor:
         """
         Predict the output of the agent.
 
         Parameters
         ----------
-        pred_set : Dataset
+        pred_set : torch_data.Dataset
             The dataset to predict.
 
         Returns
@@ -201,7 +201,7 @@ class RNNAgent(Agent):
         The output will be a tensor of shape (pred_size, seq_len, output_dim).
         """
 
-        pred_loader = DataLoader(pred_set, batch_size = len(pred_set), shuffle = False)
+        pred_loader = torch_data.DataLoader(pred_set, batch_size = len(pred_set), shuffle = False)
         self._model.eval()
         with torch.no_grad():
             x, _, m = next(iter(pred_loader))  ## type: x: torch.tensor[batch, seq, input]; m: torch.tensor[batch, seq]

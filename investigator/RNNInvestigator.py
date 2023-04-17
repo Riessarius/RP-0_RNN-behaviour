@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import torch
-from torch.utils.data import Dataset
+from torch.utils import data as torch_data
 
 from agent import Agent
 from .Investigator import Investigator
@@ -30,12 +30,13 @@ class RNNInvestigator(Investigator):
         Save the investigation.
     """
     def __init__(self) -> None:
+        super().__init__()
         self._agent_name = None
         self._output = None
         self._internal_state = None
         pass
 
-    def investigate(self, agent: Agent, dataset: Dataset,
+    def investigate(self, agent: Agent, dataset: torch_data.Dataset,
                     *args, **kwargs) -> None:
         """
         Investigate the agent.
@@ -44,7 +45,7 @@ class RNNInvestigator(Investigator):
         ----------
         agent : Agent
             The agent to investigate.
-        dataset : Dataset
+        dataset : torch_data.Dataset
             The dataset to investigate.
 
         Returns
@@ -70,7 +71,7 @@ class RNNInvestigator(Investigator):
         None
         """
 
-        investigator_dir = Path(save_rdir) / ("Investigation_" + self._agent_name)
+        investigator_dir = Path(save_rdir) / (self._agent_name + "_investigation")
         investigator_dir.mkdir(parents = True, exist_ok = True)
         torch.save(self._output, investigator_dir / "output.pt")
         torch.save(self._internal_state, investigator_dir / "internal_state.pt")

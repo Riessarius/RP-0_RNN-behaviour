@@ -53,7 +53,7 @@ print()
 print(f"Function test:")
 
 print(f"Investigate:")
-sample_agent = trainer.get_agents()[0]
+sample_agent = trainer[0][0]
 investigator.investigate(sample_agent, dataset)
 print("Done!")
 print()
