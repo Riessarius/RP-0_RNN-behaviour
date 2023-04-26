@@ -10,24 +10,65 @@ from dataset import Dataset
 
 
 class DezfouliDataset(Dataset, torch_data.Dataset):
+    """
+    The dataset which loads data from Dezfouli et al., 2019.
+
+    Attributes
+    ----------
+    _src_path : str
+        The path to the source file.
+    _mode : str
+        The mode of the dataset.
+    _original_data : pd.DataFrame
+        The original data.
+    _input : torch.tensor
+        The input of the dataset.
+    _output : torch.tensor
+        The _output of the dataset.
+    _mask : torch.tensor
+        The mask of the dataset.
+
+    Methods
+    -------
+    __len__() -> int
+        Get the length of the dataset.
+    __getitem__(idx: int) -> Tuple[torch.tensor, torch.tensor, torch.tensor]
+        Get the item at the given index.
+    subset(idx: Union[List[int], np.ndarray]) -> "DezfouliDataset"
+        Get the subset of the dataset.
+    """
+
     def __init__(self, src_path: str, mode: str = "prediction") -> None:
         super().__init__()
         self._src_path = src_path
         self._mode = mode
         self._original_data = self._load_original_data()  # type: pd.DataFrame
-        self.input, self.output, self.mask = self._generate_data()  # type: torch.tensor
+        self._input, self._output, self._mask = self._generate_data()  # type: torch.tensor
 
     def __len__(self) -> int:
-        return self.input.shape[0]
+        return self._input.shape[0]
 
     def __getitem__(self, idx: int) -> Tuple[torch.tensor, torch.tensor, torch.tensor]:
-        return self.input[idx], self.output[idx], self.mask[idx]
+        return self._input[idx], self._output[idx], self._mask[idx]
 
     def subset(self, idx: Union[List[int], np.ndarray]) -> "DezfouliDataset":
+        """
+        Get the subset of the dataset.
+
+        Parameters
+        ----------
+        idx : Union[List[int], np.ndarray]
+            The indices of the subset.
+
+        Returns
+        -------
+        DezfouliDataset
+            The subset of the dataset.
+        """
         result = deepcopy(self)
-        result.input = result.input[idx]
-        result.output = result.output[idx]
-        result.mask = result.mask[idx]
+        result._input = result._input[idx]
+        result._output = result._output[idx]
+        result._mask = result._mask[idx]
         return result
 
     def _load_original_data(self) -> pd.DataFrame:
@@ -57,7 +98,7 @@ class DezfouliDataset(Dataset, torch_data.Dataset):
         assert subject_diagnosis_is_consistent, "Inconsistent diagnosis within a subject."
 
         max_len = raw["action"].apply(len).max()
-        raw["mask"] = raw["action"].apply(lambda x: [1] * len(x) + [0] * (max_len - len(x)))
+        raw["_mask"] = raw["action"].apply(lambda x: [1] * len(x) + [0] * (max_len - len(x)))
         raw["action"] = raw["action"].apply(lambda x: x + [0] * (max_len - len(x)))
         raw["reward"] = raw["reward"].apply(lambda x: x + [0] * (max_len - len(x)))
 
@@ -66,7 +107,7 @@ class DezfouliDataset(Dataset, torch_data.Dataset):
     def _generate_data(self) -> Tuple[torch.tensor, torch.tensor, torch.tensor]:
         action = torch.tensor(np.stack(self._original_data["action"].values))
         reward = torch.tensor(np.stack(self._original_data["reward"].values))
-        mask = torch.tensor(np.stack(self._original_data["mask"].values))
+        mask = torch.tensor(np.stack(self._original_data["_mask"].values))
 
         if self._mode == "prediction":
             input = torch.stack((action[:, :-1], reward[:, :-1]), dim = 2).to(dtype = torch.float32)  # type: torch.tensor[batch, seq, 2]

@@ -1,4 +1,8 @@
 from abc import ABC, abstractmethod
+import os
+from pathlib import Path
+import pickle
+from typing import Optional
 
 
 class Investigator(ABC):
@@ -9,14 +13,17 @@ class Investigator(ABC):
     -------
     investigate(...) -> None
         Investigate the agent.
-    save(...) -> None
+    save(save_dir: Path, *args, **kwargs) -> None
         Save the investigation.
 
     Notes
     -----
     This is an abstract class which must be implemented in the subclass.
     """
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, name: Optional[str] = None, *args, **kwargs) -> None:
+        self._name = name
+        self._agent_names = []
+        self._info = []
         pass
 
     @abstractmethod
@@ -30,13 +37,20 @@ class Investigator(ABC):
         """
         pass
 
-    @abstractmethod
-    def save(self, *args, **kwargs) -> None:
+    def save(self, save_dir: Path, *args, **kwargs) -> None:
         """
         Save the investigation.
 
-        Notes
-        -----
-        This is an abstract method which must be implemented in the subclass.
+        Parameters
+        ----------
+        save_dir : Path
+            The directory to save the investigation.
+
+        Returns
+        -------
+
         """
-        pass
+        save_dir.mkdir(parents = True, exist_ok = True)
+        for i, info in enumerate(self._info):
+            for k, v in info.items():
+                pickle.dump(v, open(save_dir / f"{self._agent_names[i]}_{k}.pkl", "wb"))

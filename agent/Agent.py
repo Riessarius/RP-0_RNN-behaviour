@@ -24,7 +24,9 @@ class Agent(ABC):
     get_internal_state(...) -> None
         Get the internal state of the agent.
     predict(...) -> torch.tensor
-        Predict the output of the agent.
+        Predict the _output of the agent.
+    save(...) -> None
+        Save the agent.
 
     Notes
     -----
@@ -42,12 +44,12 @@ class Agent(ABC):
         Parameters
         ----------
         x : torch.tensor
-            The input tensor.
+            The _input tensor.
 
         Returns
         -------
         torch.tensor
-            The output tensor.
+            The _output tensor.
         """
 
         return self.predict(x)
@@ -99,7 +101,7 @@ class Agent(ABC):
     @abstractmethod
     def predict(self, *args, **kwargs) -> torch.tensor:
         """
-        Predict the output of the agent.
+        Predict the _output of the agent.
 
         Notes
         -----
@@ -108,45 +110,19 @@ class Agent(ABC):
         Returns
         -------
         torch.tensor
-            The output tensor.
+            The _output tensor.
         """
 
         pass
 
     @abstractmethod
-    def save(self, path: str, *args, **kwargs) -> None:
+    def save(self, *args, **kwargs) -> None:
         """
         Save the agent.
 
         Notes
         -----
         This is an abstract method which must be implemented in the subclass.
-
-        Parameters
-        ----------
-        path : str
-            The path to save the agent.
-
-        Returns
-        -------
-        None
-        """
-
-        pass
-
-    @abstractmethod
-    def load(self, path: str, *args, **kwargs) -> None:
-        """
-        Load the agent.
-
-        Notes
-        -----
-        This is an abstract method which must be implemented in the subclass.
-
-        Parameters
-        ----------
-        path : str
-            The path to load the agent.
 
         Returns
         -------

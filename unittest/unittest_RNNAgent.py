@@ -54,8 +54,6 @@ test_size = int(len(dataset) * test_ratio)
 train_size = len(dataset) - test_size
 train_set, test_set = random_split(dataset, [train_size, test_size])
 
-save_dir = save_rdir / agent_config["model"]["name"]
-
 print("Train:")
 agent.train(train_set, test_set, **agent_config["training"])
 print("Done!")
@@ -74,6 +72,7 @@ print("Done!")
 print()
 
 print("Save:")
-agent.save(save_rdir = save_rdir)
+save_dir = save_rdir / agent_config["model"]["name"]
+agent.save(save_dir)
 print("Done!")
 print()

@@ -49,6 +49,7 @@ print("Done!")
 print()
 
 print("Save:")
-trainer.save(save_rdir = save_rdir)
+save_dir = save_rdir / trainer_config["trainer"]["name"]
+trainer.save(save_dir)
 print("Done!")
 print()

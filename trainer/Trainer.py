@@ -24,7 +24,7 @@ class Trainer(ABC):
     -------
     train(...) -> None
         Train the agent.
-    save(save_rdir: Path, *args, **kwargs) -> None
+    save(save_dir: Path, *args, **kwargs) -> None
         Save the configuration and generated agents.
 
     Notes
@@ -57,26 +57,26 @@ class Trainer(ABC):
 
         pass
 
-    def save(self, save_rdir: Path, *args, **kwargs):
+    def save(self, save_dir: Path, *args, **kwargs):
         """
         Save the configuration and generated agents.
 
         Parameters
         ----------
-        save_rdir : Path
-            The root directory to save the configuration and generated agents.
+        save_dir : Path
+            The directory to save the configuration and generated agents.
 
         Returns
         -------
         None
         """
 
-        trainer_dir = Path(save_rdir) / self._name
-        trainer_dir.mkdir(parents = True, exist_ok = True)
+        save_dir.mkdir(parents = True, exist_ok = True)
         for i, (ag, cfg) in enumerate(zip(self._agents, self._configs)):
-            ag.save(trainer_dir)
+            agent_dir = save_dir / ag.get_name()
+            ag.save(save_dir = agent_dir)
 
-            cfg_path = trainer_dir / f"{self._name}_{i}_config.json"
+            cfg_path = save_dir / f"{ag.get_name()}_config.json"
             with cfg_path.open("w") as f:
                 opts = jsbeautifier.default_options()
                 opts.indent_size = 4

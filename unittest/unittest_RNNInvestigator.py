@@ -46,19 +46,25 @@ print("Sample training with trainer...")
 trainer.train(dataset, trainer_config["agent_model"], trainer_config["agent_training"], tensorboard_rdir = tensorboard_rdir, **trainer_config["trainer_training"])
 
 print("Creating investigator...")
-investigator = RNNInvestigator()
+with open(config_rdir / "unittest_RNNInvestigator.json", "r") as f:
+    investigator_config = json.load(f)
+if investigator_config["investigator"]["name"] is None:
+    current_time = datetime.datetime.now().strftime("%b%d_%H-%M-%S")
+    investigator_config["investigator"]["name"] = current_time
+investigator = RNNInvestigator(**investigator_config["investigator"])
 print("Done!")
 print()
 
 print(f"Function test:")
 
 print(f"Investigate:")
-sample_agent = trainer[0][0]
-investigator.investigate(sample_agent, dataset)
+agents = trainer[:][0]
+investigator.investigate(agents, dataset)
 print("Done!")
 print()
 
 print("Save:")
-investigator.save(save_rdir = save_rdir)
+save_dir = save_rdir / investigator_config["investigator"]["name"]
+investigator.save(save_dir)
 print("Save finished.")
 print()

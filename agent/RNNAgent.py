@@ -32,10 +32,8 @@ class RNNAgent(Agent):
         Train the agent.
     predict(...) -> Tuple[torch.Tensor, torch.Tensor]
         Predict the labels of the dataset.
-    save(path: Path, *args, **kwargs) -> None
+    save(save_dir: Path, *args, **kwargs) -> None
         Save the agent.
-    load(path: Path, *args, **kwargs) -> None
-        Load the agent.
 
     See Also
     --------
@@ -184,7 +182,7 @@ class RNNAgent(Agent):
 
     def predict(self, pred_set: torch_data.Dataset, *args, **kwargs) -> torch.tensor:
         """
-        Predict the output of the agent.
+        Predict the _output of the agent.
 
         Parameters
         ----------
@@ -194,19 +192,19 @@ class RNNAgent(Agent):
         Returns
         -------
         torch.tensor
-            The output of the agent.
+            The _output of the agent.
 
         Notes
         -----
-        The output will be a tensor of shape (pred_size, seq_len, output_dim).
+        The _output will be a tensor of shape (pred_size, seq_len, output_dim).
         """
 
         pred_loader = torch_data.DataLoader(pred_set, batch_size = len(pred_set), shuffle = False)
         self._model.eval()
         with torch.no_grad():
-            x, _, m = next(iter(pred_loader))  ## type: x: torch.tensor[batch, seq, input]; m: torch.tensor[batch, seq]
+            x, _, m = next(iter(pred_loader))  ## type: x: torch.tensor[batch, seq, _input]; m: torch.tensor[batch, seq]
             x, m = x.to(self._hyperparameters["device"]), m.to(self._hyperparameters["device"])
-            y_hat = self._model(x)  ## type: torch.tensor[batch, seq, output]
+            y_hat = self._model(x)  ## type: torch.tensor[batch, seq, _output]
             y_hat = y_hat * m.unsqueeze(-1)
         return y_hat
 
@@ -226,14 +224,14 @@ class RNNAgent(Agent):
 
         return self._model.get_internal_state()
 
-    def save(self, save_rdir: Path, *args, **kwargs) -> None:
+    def save(self, save_dir: Path, *args, **kwargs) -> None:
         """
         Save the agent, including model states and hyper-parameters.
 
         Parameters
         ----------
-        save_rdir : str
-            The root directory to save the agent.
+        save_dir : Path
+            The directory to save the agent.
 
         Returns
         -------
@@ -244,16 +242,11 @@ class RNNAgent(Agent):
         The hyperparameters will be saved as "hyperparameters.json".
         The model will be saved as "model.pt".
         """
+        save_dir.mkdir(parents = True, exist_ok = True)
 
-        agent_dir = Path(save_rdir) / self._name
-        agent_dir.mkdir(parents = True, exist_ok = True)
-
-        hp_path = agent_dir / "hyperparameters.json"
+        hp_path = save_dir / "hyperparameters.json"
         with open(hp_path, "w") as f:
             json.dump(self._hyperparameters, f, indent = 4)
 
-        model_path = agent_dir / "model.pt"
+        model_path = save_dir / "model.pt"
         torch.save(self._model.state_dict(), model_path)
-
-    def load(self, load_rdir: Path, *args, **kwargs) -> None:
-        raise NotImplementedError
