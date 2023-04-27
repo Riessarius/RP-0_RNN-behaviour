@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Dict, Optional
 
 from sklearn.model_selection import train_test_split
 
@@ -20,7 +20,7 @@ class SplitTrainer(Trainer):
         The name of the trainer.
     _agents : List[Agent]
         The agents.
-    _configs : List[dict]
+    _configs : List[Dict]
         The configurations.
 
     Methods
@@ -35,7 +35,7 @@ class SplitTrainer(Trainer):
     def __init__(self, name: Optional[str] = None, *args, **kwargs) -> None:
         super().__init__(name, *args, **kwargs)
 
-    def train(self, dataset: Dataset, agent_model_config: dict, agent_training_config: dict,
+    def train(self, dataset: Dataset, agent_model_config: Dict, agent_training_config: Dict,
               test_ratio: float = 0.2, shuffle: bool = True, random_state: Optional[int] = None,
               verbose_level: int = 0, tensorboard_rdir: Optional[Path] = None, *args, **kwargs) -> None:
         """
@@ -45,9 +45,9 @@ class SplitTrainer(Trainer):
         ----------
         dataset : Dataset
             The dataset to use.
-        agent_model_config : dict
+        agent_model_config : Dict
             The agent model configuration.
-        agent_training_config : dict
+        agent_training_config : Dict
             The agent training configuration.
         test_ratio : float, optional
             The ratio of the test set. Default is 0.2.

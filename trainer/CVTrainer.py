@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Dict, Optional
 
 from sklearn.model_selection import KFold
 
@@ -20,7 +20,7 @@ class CVTrainer(Trainer):
         The name of the trainer.
     _agents : List[Agent]
         The agents.
-    _configs : List[dict]
+    _configs : List[Dict]
         The configurations.
 
     Methods
@@ -36,7 +36,7 @@ class CVTrainer(Trainer):
     def __init__(self, name: Optional[str] = None, *args, **kwargs) -> None:
         super().__init__(name, *args, **kwargs)
 
-    def train(self, dataset: Dataset, agent_model_config: dict, agent_training_config: dict,
+    def train(self, dataset: Dataset, agent_model_config: Dict, agent_training_config: Dict,
               n_splits: int = 5, shuffle: bool = True, random_state: Optional[int] = None,
               verbose_level: int = 0, tensorboard_rdir: Optional[Path] = None, *args, **kwargs) -> None:
         """
@@ -46,9 +46,9 @@ class CVTrainer(Trainer):
         ----------
         dataset : Dataset
             The dataset to use.
-        agent_model_config : dict
+        agent_model_config : Dict
             The agent model configuration.
-        agent_training_config : dict
+        agent_training_config : Dict
             The agent training configuration.
         n_splits : int, optional
             The number of splits. Default is 5.

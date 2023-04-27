@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Any, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import torch
 from torch import nn, optim
@@ -21,7 +21,7 @@ class RNNAgent(Agent):
         The name of the agent.
     _model : RNNModel
         The RNN model.
-    _hyperparameters : dict
+    _hyperparameters : Dict
         The hyperparameters.
     _tensorboard_rdir : Optional[Path]
         The root directory of the tensorboard.

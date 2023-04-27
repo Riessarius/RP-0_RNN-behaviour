@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import json
 import jsbeautifier
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from agent import Agent
 
@@ -17,7 +17,7 @@ class Trainer(ABC):
         The name of the trainer.
     _agents : List[Agent]
         The agents.
-    _configs : List[dict]
+    _configs : List[Dict]
         The configurations.
 
     Methods
@@ -38,7 +38,7 @@ class Trainer(ABC):
         self._configs = []
         pass
 
-    def __getitem__(self, idx: int) -> Tuple[Agent, dict]:
+    def __getitem__(self, idx: int) -> Tuple[Agent, Dict]:
         return self._agents[idx], self._configs[idx]
 
     @abstractmethod
