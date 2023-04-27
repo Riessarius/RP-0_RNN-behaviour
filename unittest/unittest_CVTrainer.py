@@ -13,8 +13,8 @@ to_rdir()
 # ---------------------------- Configuration ----------------------------
 torch_seed = 20230310
 config_rdir = Path(r"config/unittest")
-tensorboard_rdir = Path(r"tensorboard/unittest_CVTrainer")
-save_rdir = Path(r"save/unittest_CVTrainer")
+tensorboard_rdir = Path(r"tensorboard/unittest/CVTrainer")
+save_rdir = Path(r"save/unittest")
 # ------------------------------------------------------------------------
 
 print(f"CV Trainer - Unit test:")
@@ -34,9 +34,6 @@ print()
 print("Creating trainer...")
 with open(config_rdir / "unittest_CVTrainer.json", "r") as f:
     trainer_config = json.load(f)
-if trainer_config["trainer"]["name"] is None:
-    current_time = datetime.datetime.now().strftime("%b%d_%H-%M-%S")
-    trainer_config["trainer"]["name"] = current_time
 trainer = CVTrainer(**trainer_config["trainer"])
 print("Done!")
 print()

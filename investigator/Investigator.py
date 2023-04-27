@@ -53,4 +53,4 @@ class Investigator(ABC):
         save_dir.mkdir(parents = True, exist_ok = True)
         for i, info in enumerate(self._info):
             for k, v in info.items():
-                pickle.dump(v, open(save_dir / f"{self._agent_names[i]}_{k}.pkl", "wb"))
+                pickle.dump(v, open(save_dir / f"{self._agent_names[i]}_{self._name}_{k}.pkl", "wb"))

@@ -14,8 +14,8 @@ to_rdir()
 # ---------------------------- Configuration ----------------------------
 torch_seed = 20230331
 config_rdir = Path(r"config/unittest")
-tensorboard_rdir = Path(r"tensorboard/unittest_RNNInvestigator")
-save_rdir = Path(r"save/unittest_RNNInvestigator")
+tensorboard_rdir = Path(r"tensorboard/unittest/RNNInvestigator")
+save_rdir = Path(r"save/unittest")
 # ------------------------------------------------------------------------
 
 print(f"RNN Investigator - Unit test:")
@@ -35,9 +35,6 @@ print()
 print("Creating trainer...")
 with open(config_rdir / "unittest_CVTrainer.json", "r") as f:
     trainer_config = json.load(f)
-if trainer_config["trainer"]["name"] is None:
-    current_time = datetime.datetime.now().strftime("%b%d_%H-%M-%S")
-    trainer_config["trainer"]["name"] = current_time
 trainer = CVTrainer(**trainer_config["trainer"])
 print("Done!")
 print()
@@ -48,9 +45,6 @@ trainer.train(dataset, trainer_config["agent_model"], trainer_config["agent_trai
 print("Creating investigator...")
 with open(config_rdir / "unittest_RNNInvestigator.json", "r") as f:
     investigator_config = json.load(f)
-if investigator_config["investigator"]["name"] is None:
-    current_time = datetime.datetime.now().strftime("%b%d_%H-%M-%S")
-    investigator_config["investigator"]["name"] = current_time
 investigator = RNNInvestigator(**investigator_config["investigator"])
 print("Done!")
 print()

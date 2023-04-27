@@ -75,7 +75,7 @@ class SplitTrainer(Trainer):
         if verbose_level >= 1:
             print(f"Random split: Train size: {len(train_indices)}; Test size: {len(test_indices)}.")
 
-        agent_model_config["args"]["name"] = self._name
+        agent_model_config["args"]["name"] = f"{agent_model_config['common_name']}_{self._name}"
         agent_model_config["args"]["tensorboard_rdir"] = tensorboard_rdir
         ag = agent.FromString(agent_model_config["class"])(**agent_model_config["args"])
         train_set = dataset.subset(train_indices)

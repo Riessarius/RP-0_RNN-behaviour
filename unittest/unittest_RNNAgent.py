@@ -15,8 +15,8 @@ to_rdir()
 torch_seed = 20230307
 test_ratio = 0.2
 config_rdir = Path(r"config/unittest")
-tensorboard_rdir = Path(r"tensorboard/unittest_RNNAgent")
-save_rdir = Path(r"save/unittest_RNNAgent")
+tensorboard_rdir = Path(r"tensorboard/unittest/RNNAgent")
+save_rdir = Path(r"save/unittest/RNNAgent")
 # ------------------------------------------------------------------------
 
 print("RNN Agent - Unit test:")
