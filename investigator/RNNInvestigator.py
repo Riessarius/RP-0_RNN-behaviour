@@ -1,8 +1,10 @@
 from typing import List, Optional
 
+import torch
 from torch.utils import data as torch_data
 
 from agent import Agent
+from utils import demask, structural_tensor_to_numpy as s_t2n
 from .Investigator import Investigator
 
 
@@ -47,8 +49,14 @@ class RNNInvestigator(Investigator):
         """
         for ag in agents:
             self._agent_names.append(ag.get_name())
+
+            mask = dataset[:][2].cpu().numpy()
+            output = demask(s_t2n(ag.predict(dataset)), mask)
+            internal_state = ag.get_internal_state()
+            internal_state["rnn_output"] = demask(s_t2n(internal_state["rnn_output"]), mask)
+            internal_state["final_rnn_state"] = s_t2n(internal_state["final_rnn_state"])
             info = {
-                "output": ag.predict(dataset),
-                "internal_state": ag.get_internal_state()
+                "output": output,
+                "internal_state": internal_state,
             }
             self._info.append(info)

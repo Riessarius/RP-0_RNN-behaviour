@@ -30,7 +30,11 @@ class RNNModel(nn.Module):
         return o
 
     def get_internal_state(self) -> Tuple[torch.tensor, Any]:
-        return self._rnn_output, self._final_rnn_state
+        internal_state = {
+            "rnn_output": self._rnn_output,
+            "final_rnn_state": self._final_rnn_state
+        }
+        return internal_state
 
     def reset(self) -> None:
         self._rnn_output = self._final_rnn_state = None
