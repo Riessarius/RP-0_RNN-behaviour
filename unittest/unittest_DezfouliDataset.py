@@ -35,13 +35,19 @@ print("Done!")
 print()
 
 print("Get Item:")
-sample_item = dataset[0]
+sample_item = dataset[0:3]
 print(f"Input shape:{sample_item[0].shape}; Output shape:{sample_item[1].shape}; Mask shape:{sample_item[2].shape}.")
+print(f"Info: {sample_item[3]}.")
 print("Done!")
 print()
 
 print("Get Subset:")
 subset = dataset.subset(list(range(100)))
 print(f"Subset length: {len(subset)}")
+print("Done!")
+print()
+
+print("Get numbers of unique values of info:")
+print(dataset.get_info_num_unique())
 print("Done!")
 print()

@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import List, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -21,18 +21,18 @@ class DezfouliDataset(Dataset, torch_data.Dataset):
         The mode of the dataset.
     _original_data : pd.DataFrame
         The original data.
-    _input : torch.tensor
+    _input : torch.Tensor
         The input of the dataset.
-    _output : torch.tensor
+    _output : torch.Tensor
         The _output of the dataset.
-    _mask : torch.tensor
+    _mask : torch.Tensor
         The mask of the dataset.
 
     Methods
     -------
     __len__() -> int
         Get the length of the dataset.
-    __getitem__(idx: int) -> Tuple[torch.tensor, torch.tensor, torch.tensor]
+    __getitem__(idx: int) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
         Get the item at the given index.
     subset(idx: Union[List[int], np.ndarray]) -> "DezfouliDataset"
         Get the subset of the dataset.
@@ -43,13 +43,13 @@ class DezfouliDataset(Dataset, torch_data.Dataset):
         self._src_path = src_path
         self._mode = mode
         self._original_data = self._load_original_data()  # type: pd.DataFrame
-        self._input, self._output, self._mask = self._generate_data()  # type: torch.tensor
+        self._input, self._output, self._mask, self._info = self._generate_data()  # type: torch.Tensor
 
     def __len__(self) -> int:
         return self._input.shape[0]
 
-    def __getitem__(self, idx: int) -> Tuple[torch.tensor, torch.tensor, torch.tensor]:
-        return self._input[idx], self._output[idx], self._mask[idx]
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, Dict]:
+        return self._input[idx], self._output[idx], self._mask[idx], {k: v[idx] for k, v in self._info.items()}
 
     def subset(self, idx: Union[List[int], np.ndarray]) -> "DezfouliDataset":
         """
@@ -71,6 +71,18 @@ class DezfouliDataset(Dataset, torch_data.Dataset):
         result._mask = result._mask[idx]
         return result
 
+    def get_info_num_unique(self) -> Dict:
+        """
+        Get the number of unique values in each column of the info.
+
+        Returns
+        -------
+        Dict
+            The number of unique values in each column of the info.
+        """
+        num_unique = {k: len(np.unique(v)) for k, v in self._info.items()}
+        return num_unique
+
     def _load_original_data(self) -> pd.DataFrame:
         raw = pd.read_csv(self._src_path).groupby(["ID", "block"]).agg(list)
 
@@ -91,10 +103,11 @@ class DezfouliDataset(Dataset, torch_data.Dataset):
         raw.drop(columns = ["is_best"], inplace = True)
 
         assert "diag" in raw.columns
-        block_diagnosis_is_consistent = raw["diag"].apply(lambda x: len(pd.unique(x)) == 1).all()
+        raw.rename(columns = {"diag": "diagnosis"}, inplace = True)
+        block_diagnosis_is_consistent = raw["diagnosis"].apply(lambda x: len(pd.unique(x)) == 1).all()
         assert block_diagnosis_is_consistent, "Inconsistent diagnosis within a block."
-        raw["diag"] = raw["diag"].apply(lambda x: x[0])
-        subject_diagnosis_is_consistent = raw["diag"].groupby(["ID"]).agg(list).apply(lambda x: len(pd.unique(x)) == 1).all()
+        raw["diagnosis"] = raw["diagnosis"].apply(lambda x: x[0])
+        subject_diagnosis_is_consistent = raw["diagnosis"].groupby(["ID"]).agg(list).apply(lambda x: len(pd.unique(x)) == 1).all()
         assert subject_diagnosis_is_consistent, "Inconsistent diagnosis within a subject."
 
         max_len = raw["action"].apply(len).max()
@@ -102,17 +115,33 @@ class DezfouliDataset(Dataset, torch_data.Dataset):
         raw["action"] = raw["action"].apply(lambda x: x + [0] * (max_len - len(x)))
         raw["reward"] = raw["reward"].apply(lambda x: x + [0] * (max_len - len(x)))
 
+        raw.reset_index(inplace = True)
+        id_no_map = {id: no for no, id in enumerate(raw["ID"].unique())}
+        raw["no"] = raw["ID"].apply(lambda x: id_no_map[x])
+        block_no_map = {block: no for no, block in enumerate(raw["block"].unique())}
+        raw["block_no"] = raw["block"].apply(lambda x: block_no_map[x])
+        diag_no_map = {diag: no for no, diag in enumerate(raw["diagnosis"].unique())}
+        raw["diagnosis_no"] = raw["diagnosis"].apply(lambda x: diag_no_map[x])
+
         return raw
 
-    def _generate_data(self) -> Tuple[torch.tensor, torch.tensor, torch.tensor]:
+    def _generate_data(self) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, Dict]:
         action = torch.tensor(np.stack(self._original_data["action"].values))
         reward = torch.tensor(np.stack(self._original_data["reward"].values))
         mask = torch.tensor(np.stack(self._original_data["_mask"].values))
+        info = {
+            "subject_id": self._original_data["ID"].values,
+            "block": self._original_data["block"].values,
+            "diagnosis": self._original_data["diagnosis"].values,
+            "subject_no": torch.tensor(self._original_data["no"].values),
+            "block_no": torch.tensor(self._original_data["block_no"].values),
+            "diagnosis_no": torch.tensor(self._original_data["diagnosis_no"].values),
+        }
 
         if self._mode == "prediction":
-            input = torch.stack((action[:, :-1], reward[:, :-1]), dim = 2).to(dtype = torch.float32)  # type: torch.tensor[batch, seq, 2]
-            output = action[:, 1:].to(dtype = torch.int64)  # type: torch.tensor[batch, seq]
-            mask = mask[:, 1:].to(dtype = torch.bool)  # type: torch.tensor[batch, seq]
-            return input, output, mask
+            input = torch.stack((action[:, :-1], reward[:, :-1]), dim = 2).to(dtype = torch.float32)  # type: torch.Tensor[batch, seq, 2]
+            output = action[:, 1:].to(dtype = torch.int64)  # type: torch.Tensor[batch, seq]
+            mask = mask[:, 1:].to(dtype = torch.bool)  # type: torch.Tensor[batch, seq]
+            return input, output, mask, info
         else:
             raise ValueError(f"Unexpected mode: {self._mode}")
