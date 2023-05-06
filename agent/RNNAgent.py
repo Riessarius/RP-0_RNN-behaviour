@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+from copy import deepcopy
 
 import torch
 from torch import nn, optim
@@ -62,7 +63,7 @@ class RNNAgent(Agent):
         }
 
     def train(self, train_set: torch_data.Dataset, test_set: torch_data.Dataset,
-              device: str = "cpu", batch_size: Optional[int] = None, n_epochs: int = 100,
+              device: str = "cpu", batch_size: Optional[int] = None, max_num_epoch: int = 1000, early_stopping: Optional[int] = None,
               criterion: str = "CrossEntropy", optimizer: str = "SGD", lr: float = 0.01, weight_decay: float = 0.01,
               verbose_level: int = 0, *args, **kwargs) -> None:
         """
@@ -79,8 +80,10 @@ class RNNAgent(Agent):
             The device to use. Default is "cpu".
         batch_size : int, optional
             The batch size. Default is None.
-        n_epochs : int, optional
-            The number of epochs. Default is 100.
+        max_num_epoch : int
+            The maximum number of epochs. Default is 1000.
+        early_stopping : int, optional
+            The number of epochs to wait before early stopping. Default is None.
         criterion : str, optional
             The criterion to use. Default is "CrossEntropy".
         optimizer : str, optional
@@ -105,7 +108,8 @@ class RNNAgent(Agent):
         self._hyperparameters |= {
             "device": device,
             "batch_size": batch_size,
-            "n_epochs": n_epochs,
+            "max_epochs": max_num_epoch,
+            "early_stopping": early_stopping,
             "criterion": criterion,
             "optimizer": optimizer,
             "lr": lr,
@@ -132,10 +136,11 @@ class RNNAgent(Agent):
 
         model = self._model.to(_device)
         best_loss = float("inf")
+        early_stopping_counter = 0
         train_loader = torch_data.DataLoader(train_set, batch_size = batch_size, shuffle = False)
         test_loader = torch_data.DataLoader(test_set, batch_size = len(test_set), shuffle = False)
 
-        for e in range(n_epochs):
+        for e in range(max_num_epoch):
             model.train()
             total_train_loss = 0.
             total_train_trials = 0
@@ -153,7 +158,7 @@ class RNNAgent(Agent):
                     total_train_trials += m.flatten().sum().item()
 
                     if verbose_level >= 3:
-                        print(f"Epoch {e} / {n_epochs}: Batch {i} / {len(train_loader)}: Train loss: {loss.item()}.")
+                        print(f"Epoch {e} / {max_num_epoch}: Batch {i} / {len(train_loader)}: Train loss: {loss.item()}.")
 
             model.eval()
             total_test_loss = 0.
@@ -170,10 +175,18 @@ class RNNAgent(Agent):
 
                     if loss.item() < best_loss:
                         best_loss = loss.item()
-                        self._model = model
+                        early_stopping_counter = 0
+                        self._model = deepcopy(model)
+                    else:
+                        early_stopping_counter += 1
+
+                    if early_stopping is not None and early_stopping_counter >= early_stopping:
+                        if verbose_level >= 1:
+                            print(f"Early stopping after {e} epochs.")
+                        return
 
                     if verbose_level >= 3:
-                        print(f"Epoch {e} / {n_epochs}: Batch {i} / {len(test_loader)}: Test loss: {loss.item()}.")
+                        print(f"Epoch {e} / {max_num_epoch}: Batch {i} / {len(test_loader)}: Test loss: {loss.item()}.")
 
             train_loss = total_train_loss / total_train_trials
             test_loss = total_test_loss / total_test_trials
@@ -183,7 +196,7 @@ class RNNAgent(Agent):
                 writer.add_scalar("Loss/test", test_loss, e)
 
             if verbose_level >= 2:
-                print(f"Epoch {e} / {n_epochs}: Train loss: {train_loss}; Test loss: {test_loss}.")
+                print(f"Epoch {e} / {max_num_epoch}: Train loss: {train_loss}; Test loss: {test_loss}.")
 
         if verbose_level >= 1:
             print(f"Model trained and stored with the best test loss: {best_loss}.")
