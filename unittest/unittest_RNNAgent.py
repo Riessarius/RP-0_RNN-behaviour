@@ -36,9 +36,11 @@ print()
 print("Creating agent...")
 with open(config_rdir / "unittest_RNNAgent.json", "r") as f:
     agent_config = json.load(f)
-if agent_config["model"]["name"] is None:
-    current_time = datetime.datetime.now().strftime("%b%d_%H-%M-%S")
-    agent_config["model"]["name"] = current_time
+if "embedding_keys" in agent_config["model"]:
+    num_unique = dataset.get_info_num_unique()
+    agent_config["model"]["num_embeddings"] = []
+    for k in agent_config["model"]["embedding_keys"]:
+        agent_config["model"]["num_embeddings"].append(num_unique[k])
 agent = RNNAgent(tensorboard_rdir = tensorboard_rdir, **agent_config["model"])
 print("Done!")
 print()

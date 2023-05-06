@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Tuple, Optional, Union
 
 import torch
 
@@ -37,7 +37,7 @@ class Agent(ABC):
         self._name = name
         pass
 
-    def __call__(self, x: torch.tensor) -> torch.tensor:
+    def __call__(self, x: Union[torch.tensor, Tuple[torch.Tensor]]) -> torch.tensor:
         """
         Synonym for predict.
 

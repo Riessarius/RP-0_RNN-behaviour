@@ -75,7 +75,7 @@ class CVTrainer(Trainer):
             if verbose_level >= 1:
                 print(f"Cross validation - Fold {f}: Train size: {len(train_indices)}; Test size: {len(test_indices)}.")
 
-            agent_model_config["args"]["name"] = f"{agent_model_config['common_name']}_{self._name}Fold{f}"
+            agent_model_config["args"]["name"] = f"{agent_model_config['common_name']}_{self._name}_Fold{f}"
             agent_model_config["args"]["tensorboard_rdir"] = tensorboard_rdir
             ag = agent.FromString(agent_model_config["class"])(**agent_model_config["args"])
             train_set = dataset.subset(train_indices)

@@ -34,6 +34,11 @@ print()
 print("Creating trainer...")
 with open(config_rdir / "unittest_CVTrainer.json", "r") as f:
     trainer_config = json.load(f)
+if "embedding_keys" in trainer_config["agent_model"]["args"]:
+    num_unique = dataset.get_info_num_unique()
+    trainer_config["agent_model"]["args"]["num_embeddings"] = []
+    for k in trainer_config["agent_model"]["args"]["embedding_keys"]:
+        trainer_config["agent_model"]["args"]["num_embeddings"].append(num_unique[k])
 trainer = CVTrainer(**trainer_config["trainer"])
 print("Done!")
 print()

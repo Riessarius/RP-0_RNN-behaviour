@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import torch
 from torch import nn, optim
@@ -46,15 +46,19 @@ class RNNAgent(Agent):
     """
 
     def __init__(self, rnn_type: str, input_dim: int, rnn_dim: int, output_dim: int,
+                 embedding_keys: Optional[List[str]] = None, num_embeddings: Optional[Tuple[int]] = None, embedding_dims: Optional[Tuple[int]] = None,
                  name: Optional[str] = None, tensorboard_rdir: Optional[Path] = None, *args, **kwargs) -> None:
         super().__init__(name, *args, **kwargs)
         self._tensorboard_rdir = tensorboard_rdir
-        self._model = RNNModel(rnn_type, input_dim, rnn_dim, output_dim)
+        self._model = RNNModel(rnn_type, input_dim, rnn_dim, output_dim, num_embeddings, embedding_dims)
         self._hyperparameters = {
             "rnn_type": rnn_type,
             "input_dim": input_dim,
             "rnn_dim": rnn_dim,
-            "output_dim": output_dim
+            "output_dim": output_dim,
+            "embedding_keys": embedding_keys,
+            "num_embeddings": num_embeddings,
+            "embedding_dims": embedding_dims,
         }
 
     def train(self, train_set: torch_data.Dataset, test_set: torch_data.Dataset,
@@ -109,6 +113,9 @@ class RNNAgent(Agent):
             "verbose_level": verbose_level,
         }
 
+        _device = self._hyperparameters["device"]
+        _embedding_keys = self._hyperparameters["embedding_keys"]
+
         if criterion == "CrossEntropy":
             criterion = nn.CrossEntropyLoss(reduction = "none")
         else:
@@ -123,7 +130,7 @@ class RNNAgent(Agent):
 
         writer = SummaryWriter(str(self._tensorboard_rdir / self._name)) if self._tensorboard_rdir is not None and self._name is not None else None
 
-        model = self._model.to(device)
+        model = self._model.to(_device)
         best_loss = float("inf")
         train_loader = torch_data.DataLoader(train_set, batch_size = batch_size, shuffle = False)
         test_loader = torch_data.DataLoader(test_set, batch_size = len(test_set), shuffle = False)
@@ -133,8 +140,10 @@ class RNNAgent(Agent):
             total_train_loss = 0.
             total_train_trials = 0
             with torch.enable_grad():
-                for i, (x, y, m) in enumerate(train_loader):
-                    x, y, m = x.to(device), y.to(device), m.to(device)
+                for i, (x, y, m, info) in enumerate(train_loader):
+                    x, y, m = x.to(_device), y.to(_device), m.to(_device)
+                    if _embedding_keys is not None:
+                        x = tuple([x, torch.stack([info[key] for key in self._hyperparameters["embedding_keys"]]).transpose(0, 1).to(_device)])
                     optimizer.zero_grad()
                     y_hat = model(x)
                     loss = (criterion(y_hat.flatten(end_dim = -2), y.flatten()) * m.flatten()).sum() / m.flatten().sum()
@@ -150,8 +159,10 @@ class RNNAgent(Agent):
             total_test_loss = 0.
             total_test_trials = 0
             with torch.no_grad():
-                for i, (x, y, m) in enumerate(test_loader):
-                    x, y, m = x.to(device), y.to(device), m.to(device)
+                for i, (x, y, m, info) in enumerate(test_loader):
+                    x, y, m = x.to(_device), y.to(_device), m.to(_device)
+                    if _embedding_keys is not None:
+                        x = tuple([x, torch.stack([info[key] for key in self._hyperparameters["embedding_keys"]]).transpose(0, 1).to(_device)])
                     y_hat = model(x)
                     loss = (criterion(y_hat.reshape(-1, y_hat.shape[2]), y.flatten()) * m.flatten()).sum() / m.flatten().sum()
                     total_test_loss += loss.item() * m.flatten().sum().item()
@@ -198,13 +209,17 @@ class RNNAgent(Agent):
         -----
         The _output will be a tensor of shape (pred_size, seq_len, output_dim).
         """
+        _device = self._hyperparameters["device"]
+        _embedding_keys = self._hyperparameters["embedding_keys"]
 
         pred_loader = torch_data.DataLoader(pred_set, batch_size = len(pred_set), shuffle = False)
         self._model.eval()
         with torch.no_grad():
-            x, _, m = next(iter(pred_loader))  ## type: x: torch.tensor[batch, seq, _input]; m: torch.tensor[batch, seq]
-            x, m = x.to(self._hyperparameters["device"]), m.to(self._hyperparameters["device"])
-            y_hat = self._model(x)  ## type: torch.tensor[batch, seq, _output]
+            x, _, m, info = next(iter(pred_loader))  # type: x: torch.Tensor[batch, seq, _input]; m: torch.Tensor[batch, seq]
+            x, m = x.to(_device), m.to(_device)
+            if _embedding_keys is not None:
+                x = tuple([x, torch.stack([info[key] for key in self._hyperparameters["embedding_keys"]]).transpose(0, 1).to(_device)])
+            y_hat = self._model(x)  # type: torch.Tensor[batch, seq, _output]
             y_hat = y_hat * m.unsqueeze(-1)
         return y_hat
 
