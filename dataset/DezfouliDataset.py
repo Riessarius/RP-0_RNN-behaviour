@@ -69,6 +69,7 @@ class DezfouliDataset(Dataset, torch_data.Dataset):
         result._input = result._input[idx]
         result._output = result._output[idx]
         result._mask = result._mask[idx]
+        result._info = {k: v[idx] for k, v in result._info.items()}
         return result
 
     def get_info_num_unique(self) -> Dict:
