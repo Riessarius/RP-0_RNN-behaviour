@@ -30,7 +30,7 @@ def structural_tensor_to_numpy(obj: Union[Dict, List, Tuple, torch.tensor]) -> U
         if obj_new.size == 1:  # transform 1-element array to scalar
             obj_new = obj_new.item()
     else:
-        raise ValueError(f"Unknown type: {type(obj)}")
+        obj_new = obj
     return obj_new
 
 
