@@ -111,6 +111,9 @@ class DezfouliDataset(Dataset, torch_data.Dataset):
         subject_diagnosis_is_consistent = raw["diagnosis"].groupby(["ID"]).agg(list).apply(lambda x: len(pd.unique(x)) == 1).all()
         assert subject_diagnosis_is_consistent, "Inconsistent diagnosis within a subject."
 
+        raw["reward_count"] = raw["reward"].apply(lambda x: sum(x))
+        raw["trial_count"] = raw["reward"].apply(len)
+
         max_len = raw["action"].apply(len).max()
         raw["_mask"] = raw["action"].apply(lambda x: [1] * len(x) + [0] * (max_len - len(x)))
         raw["action"] = raw["action"].apply(lambda x: x + [0] * (max_len - len(x)))
@@ -137,6 +140,8 @@ class DezfouliDataset(Dataset, torch_data.Dataset):
             "subject_no": torch.tensor(self._original_data["no"].values),
             "block_no": torch.tensor(self._original_data["block_no"].values),
             "diagnosis_no": torch.tensor(self._original_data["diagnosis_no"].values),
+            "reward_count": torch.tensor(self._original_data["reward_count"].values),
+            "trial_count": torch.tensor(self._original_data["trial_count"].values),
         }
 
         if self._mode == "prediction":
