@@ -35,7 +35,7 @@ print("Creating trainer...")
 with open(config_rdir / "unittest_SplitTrainer.json", "r") as f:
     trainer_config = json.load(f)
 if "embedding_keys" in trainer_config["agent_model"]["args"]:
-    num_unique = dataset.get_info_num_unique()
+    num_unique = dataset.get_num_unique()
     trainer_config["agent_model"]["args"]["num_embeddings"] = []
     for k in trainer_config["agent_model"]["args"]["embedding_keys"]:
         trainer_config["agent_model"]["args"]["num_embeddings"].append(num_unique[k])

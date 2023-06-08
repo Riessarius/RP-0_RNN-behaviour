@@ -145,10 +145,12 @@ class RNNAgent(Agent):
             total_train_loss = 0.
             total_train_trials = 0
             with torch.enable_grad():
-                for i, (x, y, m, info) in enumerate(train_loader):
-                    x, y, m = x.to(_device), y.to(_device), m.to(_device)
+                for i, data in enumerate(train_loader):
+                    x = data["input"].to(_device)
+                    y = data["output"].to(_device)
+                    m = data["mask"].to(_device)
                     if _embedding_keys is not None:
-                        x = tuple([x, torch.stack([info[key] for key in self._hyperparameters["embedding_keys"]]).transpose(0, 1).to(_device)])
+                        x = tuple([x, torch.stack([data[key] for key in self._hyperparameters["embedding_keys"]]).transpose(0, 1).to(_device)])
                     optimizer.zero_grad()
                     y_hat = model(x)
                     loss = (criterion(y_hat.flatten(end_dim = -2), y.flatten()) * m.flatten()).sum() / m.flatten().sum()
@@ -164,10 +166,12 @@ class RNNAgent(Agent):
             total_test_loss = 0.
             total_test_trials = 0
             with torch.no_grad():
-                for i, (x, y, m, info) in enumerate(test_loader):
-                    x, y, m = x.to(_device), y.to(_device), m.to(_device)
+                for i, data in enumerate(test_loader):
+                    x = data["input"].to(_device)
+                    y = data["output"].to(_device)
+                    m = data["mask"].to(_device)
                     if _embedding_keys is not None:
-                        x = tuple([x, torch.stack([info[key] for key in self._hyperparameters["embedding_keys"]]).transpose(0, 1).to(_device)])
+                        x = tuple([x, torch.stack([data[key] for key in self._hyperparameters["embedding_keys"]]).transpose(0, 1).to(_device)])
                     y_hat = model(x)
                     loss = (criterion(y_hat.reshape(-1, y_hat.shape[2]), y.flatten()) * m.flatten()).sum() / m.flatten().sum()
                     total_test_loss += loss.item() * m.flatten().sum().item()
@@ -228,10 +232,11 @@ class RNNAgent(Agent):
         pred_loader = torch_data.DataLoader(pred_set, batch_size = len(pred_set), shuffle = False)
         self._model.eval()
         with torch.no_grad():
-            x, _, m, info = next(iter(pred_loader))  # type: x: torch.Tensor[batch, seq, _input]; m: torch.Tensor[batch, seq]
-            x, m = x.to(_device), m.to(_device)
+            data = next(iter(pred_loader))  # type: x: torch.Tensor[batch, seq, _input]; m: torch.Tensor[batch, seq]
+            x = data["input"].to(_device)
+            m = data["mask"].to(_device)
             if _embedding_keys is not None:
-                x = tuple([x, torch.stack([info[key] for key in self._hyperparameters["embedding_keys"]]).transpose(0, 1).to(_device)])
+                x = tuple([x, torch.stack([data[key] for key in self._hyperparameters["embedding_keys"]]).transpose(0, 1).to(_device)])
             y_hat = self._model(x)  # type: torch.Tensor[batch, seq, _output]
             y_hat = y_hat * m.unsqueeze(-1)
         return y_hat

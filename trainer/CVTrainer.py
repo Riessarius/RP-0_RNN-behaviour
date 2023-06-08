@@ -78,8 +78,8 @@ class CVTrainer(Trainer):
             agent_model_config["args"]["name"] = f"{agent_model_config['common_name']}_{self._name}_Fold{f}"
             agent_model_config["args"]["tensorboard_rdir"] = tensorboard_rdir
             ag = agent.FromString(agent_model_config["class"])(**agent_model_config["args"])
-            train_set = dataset.subset(train_indices)
-            test_set = dataset.subset(test_indices)
+            train_set = dataset.subset(train_indices).set_mode("train")
+            test_set = dataset.subset(test_indices).set_mode("test")
             ag.train(train_set, test_set, **agent_training_config)
             self._agents.append(ag)
 

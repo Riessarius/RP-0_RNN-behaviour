@@ -37,7 +37,7 @@ print("Creating agent...")
 with open(config_rdir / "unittest_RNNAgent.json", "r") as f:
     agent_config = json.load(f)
 if "embedding_keys" in agent_config["model"]:
-    num_unique = dataset.get_info_num_unique()
+    num_unique = dataset.get_num_unique()
     agent_config["model"]["num_embeddings"] = []
     for k in agent_config["model"]["embedding_keys"]:
         agent_config["model"]["num_embeddings"].append(num_unique[k])
