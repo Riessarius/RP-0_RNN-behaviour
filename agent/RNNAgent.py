@@ -8,6 +8,7 @@ from torch import nn, optim
 from torch.utils import data as torch_data
 from torch.utils.tensorboard import SummaryWriter
 
+from dataset import Dataset
 from .Agent import Agent
 from .model.RNNModel import RNNModel
 
@@ -62,7 +63,7 @@ class RNNAgent(Agent):
             "embedding_dims": embedding_dims,
         }
 
-    def train(self, train_set: torch_data.Dataset, test_set: torch_data.Dataset,
+    def train(self, train_set: Dataset, test_set: Dataset,
               device: str = "cpu", batch_size: Optional[int] = None, max_num_epoch: int = 1000, early_stopping: Optional[int] = None,
               criterion: str = "CrossEntropy", optimizer: str = "SGD", lr: float = 0.01, weight_decay: float = 0.01,
               verbose_level: int = 0, *args, **kwargs) -> None:

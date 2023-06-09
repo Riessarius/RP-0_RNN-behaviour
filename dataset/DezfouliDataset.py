@@ -3,12 +3,11 @@ from typing import Any, Dict
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils import data as torch_data
 
 from dataset import Dataset
 
 
-class DezfouliDataset(Dataset, torch_data.Dataset):
+class DezfouliDataset(Dataset):
     """
     The dataset which loads data from Dezfouli et al., 2019.
 
@@ -25,8 +24,6 @@ class DezfouliDataset(Dataset, torch_data.Dataset):
         Get the length of the dataset.
     __getitem__(idx: int) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
         Get the item at the given index.
-    subset(idx: Union[List[int], np.ndarray]) -> "DezfouliDataset"
-        Get the subset of the dataset.
     """
 
     def __init__(self, src_path: str, default_mode: str = "default", *args, **kwargs) -> None:

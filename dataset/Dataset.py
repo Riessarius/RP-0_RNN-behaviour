@@ -2,8 +2,10 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import Any, Dict
 
+import torch.utils.data
 
-class Dataset(ABC):
+
+class Dataset(ABC, torch.utils.data.Dataset):
     """
     Base class for all datasets.
 
@@ -13,8 +15,6 @@ class Dataset(ABC):
         Get the item at the given index.
     __len__() -> int
         Get the length of the dataset.
-    subset(idx: Union[List[int], np.ndarray]) -> "Dataset"
-        Get the subset of the dataset.
 
     Notes
     -----
@@ -45,24 +45,24 @@ class Dataset(ABC):
     def __getitem__(self, idx: Any) -> Any:
         pass
 
-    def subset(self, idx: Any) -> "Dataset":
-        """
-        Get the subset of the dataset.
-
-        Parameters
-        ----------
-        idx : Any
-            The indices of the subset.
-
-        Returns
-        -------
-        Dataset
-            The subset of the dataset.
-        """
-        result = deepcopy(self)
-        for mode in result._full_data.keys():
-            result._full_data[mode] = {k: v[idx] for k, v in result._full_data[mode].items()}
-        return result
+    # def subset(self, idx: Any) -> "Dataset":
+    #     """
+    #     Get the subset of the dataset.
+    #
+    #     Parameters
+    #     ----------
+    #     idx : Any
+    #         The indices of the subset.
+    #
+    #     Returns
+    #     -------
+    #     Dataset
+    #         The subset of the dataset.
+    #     """
+    #     result = deepcopy(self)
+    #     for mode in result._full_data.keys():
+    #         result._full_data[mode] = {k: v[idx] for k, v in result._full_data[mode].items()}
+    #     return result
 
     def set_mode(self, mode: str, as_default: bool = False):
         """
