@@ -21,7 +21,7 @@ class Dataset(ABC, torch.utils.data.Dataset):
     This is an abstract class which must be implemented in the subclass.
     """
 
-    def __init__(self, default_mode: str = "default", *args, **kwargs):
+    def __init__(self, default_mode: str = 'default', *args, **kwargs):
         self._default_mode = default_mode
         self._mode = default_mode
         self._full_data = {
@@ -45,7 +45,7 @@ class Dataset(ABC, torch.utils.data.Dataset):
     def __getitem__(self, idx: Any) -> Any:
         pass
 
-    # def subset(self, idx: Any) -> "Dataset":
+    # def subset(self, idx: Any) -> 'Dataset':
     #     """
     #     Get the subset of the dataset.
     #

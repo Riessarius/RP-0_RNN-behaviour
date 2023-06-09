@@ -53,10 +53,10 @@ class RNNInvestigator(Investigator):
             mask = dataset[:][2].cpu().numpy()
             output = demask(s_t2n(ag.predict(dataset)), mask)
             internal_state = ag.get_internal_state()
-            internal_state["rnn_output"] = demask(s_t2n(internal_state["rnn_output"]), mask)
-            internal_state["final_rnn_state"] = s_t2n(internal_state["final_rnn_state"])
+            internal_state['rnn_output'] = demask(s_t2n(internal_state['rnn_output']), mask)
+            internal_state['final_rnn_state'] = s_t2n(internal_state['final_rnn_state'])
             info = {
-                "output": output,
-                "internal_state": internal_state,
+                'output': output,
+                'internal_state': internal_state,
             }
             self._info.append(info)

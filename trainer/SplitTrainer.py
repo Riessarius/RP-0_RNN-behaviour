@@ -68,28 +68,28 @@ class SplitTrainer(Trainer):
         """
 
         common_config = {
-            "test_ratio": test_ratio,
-            "verbose_level": verbose_level,
+            'test_ratio': test_ratio,
+            'verbose_level': verbose_level,
         }
 
-        train_dataset = deepcopy(dataset.set_mode("train"))
-        test_dataset = deepcopy(dataset.set_mode("test"))
+        train_dataset = deepcopy(dataset.set_mode('train'))
+        test_dataset = deepcopy(dataset.set_mode('test'))
 
         train_indices, test_indices = train_test_split(range(len(dataset)), test_size = test_ratio, shuffle = shuffle, random_state = random_state)
 
         if verbose_level >= 1:
             print(f"Random split: Train size: {len(train_indices)}; Test size: {len(test_indices)}.")
 
-        agent_model_config["args"]["name"] = f"{agent_model_config['common_name']}_{self._name}"
-        agent_model_config["args"]["tensorboard_rdir"] = tensorboard_rdir
-        ag = agent.FromString(agent_model_config["class"])(**agent_model_config["args"])
+        agent_model_config['args']['name'] = f"{agent_model_config['common_name']}_{self._name}"
+        agent_model_config['args']['tensorboard_rdir'] = tensorboard_rdir
+        ag = agent.FromString(agent_model_config['class'])(**agent_model_config['args'])
         train_subset = Subset(train_dataset, train_indices)
         test_subset = Subset(test_dataset, test_indices)
         ag.train(train_subset, test_subset, **agent_training_config)
         self._agents.append(ag)
 
         cfg = common_config | {
-            "train_indices": train_indices,
-            "test_indices": test_indices,
+            'train_indices': train_indices,
+            'test_indices': test_indices,
         }
         self._configs.append(cfg)

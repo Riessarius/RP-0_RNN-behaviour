@@ -27,21 +27,21 @@ print("Done!")
 print()
 
 print("Loading dataset...")
-with open(config_rdir / "unittest_DezfouliDataset.json", "r") as f:
+with open(config_rdir / "unittest_DezfouliDataset.json", 'r') as f:
     dataset_config = json.load(f)
 dataset = DezfouliDataset(**dataset_config)
 print("Done!")
 print()
 
 print("Creating agent...")
-with open(config_rdir / "unittest_RNNAgent.json", "r") as f:
+with open(config_rdir / "unittest_RNNAgent.json", 'r') as f:
     agent_config = json.load(f)
-if "embedding_keys" in agent_config["model"]:
+if 'embedding_keys' in agent_config['model']:
     num_unique = dataset.get_num_unique()
-    agent_config["model"]["num_embeddings"] = []
-    for k in agent_config["model"]["embedding_keys"]:
-        agent_config["model"]["num_embeddings"].append(num_unique[k])
-agent = RNNAgent(tensorboard_rdir = tensorboard_rdir, **agent_config["model"])
+    agent_config['model']['num_embeddings'] = []
+    for k in agent_config['model']['embedding_keys']:
+        agent_config['model']['num_embeddings'].append(num_unique[k])
+agent = RNNAgent(tensorboard_rdir = tensorboard_rdir, **agent_config['model'])
 print("Done!")
 print()
 
@@ -57,12 +57,12 @@ train_size = len(dataset) - test_size
 train_set, test_set = random_split(dataset, [train_size, test_size])
 
 print("Train:")
-agent.train(train_set, test_set, **agent_config["training"])
+agent.train(train_set, test_set, **agent_config['training'])
 print("Done!")
 print()
 
 print("Predict:")
-output = agent.predict(test_set, **agent_config["training"])
+output = agent.predict(test_set, **agent_config['training'])
 print(output)
 print("Done!")
 print()
@@ -74,7 +74,7 @@ print("Done!")
 print()
 
 print("Save:")
-save_dir = save_rdir / agent_config["model"]["name"]
+save_dir = save_rdir / agent_config['model']['name']
 agent.save(save_dir)
 print("Done!")
 print()

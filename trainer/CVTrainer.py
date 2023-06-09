@@ -68,28 +68,28 @@ class CVTrainer(Trainer):
         None
         """
         common_config = {
-            "n_splits": n_splits,
-            "verbose_level": verbose_level,
+            'n_splits': n_splits,
+            'verbose_level': verbose_level,
         }
 
-        train_dataset = deepcopy(dataset.set_mode("train"))
-        test_dataset = deepcopy(dataset.set_mode("test"))
+        train_dataset = deepcopy(dataset.set_mode('train'))
+        test_dataset = deepcopy(dataset.set_mode('test'))
 
         kf = KFold(n_splits = n_splits, shuffle = shuffle, random_state = random_state)
         for f, (train_indices, test_indices) in enumerate(kf.split(dataset)):
             if verbose_level >= 1:
                 print(f"Cross validation - Fold {f}: Train size: {len(train_indices)}; Test size: {len(test_indices)}.")
 
-            agent_model_config["args"]["name"] = f"{agent_model_config['common_name']}_{self._name}_Fold{f}"
-            agent_model_config["args"]["tensorboard_rdir"] = tensorboard_rdir
-            ag = agent.FromString(agent_model_config["class"])(**agent_model_config["args"])
+            agent_model_config['args']['name'] = f"{agent_model_config['common_name']}_{self._name}_Fold{f}"
+            agent_model_config['args']['tensorboard_rdir'] = tensorboard_rdir
+            ag = agent.FromString(agent_model_config['class'])(**agent_model_config['args'])
             train_subset = Subset(train_dataset, train_indices)
             test_subset = Subset(test_dataset, test_indices)
             ag.train(train_subset, test_subset, **agent_training_config)
             self._agents.append(ag)
 
             cfg = common_config | {
-                "train_indices": train_indices.tolist(),
-                "test_indices": test_indices.tolist(),
+                'train_indices': train_indices.tolist(),
+                'test_indices': test_indices.tolist(),
             }
             self._configs.append(cfg)

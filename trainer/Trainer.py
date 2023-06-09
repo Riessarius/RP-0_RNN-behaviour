@@ -77,7 +77,7 @@ class Trainer(ABC):
             ag.save(save_dir = agent_dir)
 
             cfg_path = save_dir / f"{ag.get_name()}_config.json"
-            with cfg_path.open("w") as f:
+            with cfg_path.open('w') as f:
                 opts = jsbeautifier.default_options()
                 opts.indent_size = 4
                 f.write(jsbeautifier.beautify(json.dumps(cfg), opts))

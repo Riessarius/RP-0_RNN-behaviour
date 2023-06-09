@@ -54,18 +54,18 @@ class RNNAgent(Agent):
         self._tensorboard_rdir = tensorboard_rdir
         self._model = RNNModel(rnn_type, input_dim, rnn_dim, output_dim, num_embeddings, embedding_dims)
         self._hyperparameters = {
-            "rnn_type": rnn_type,
-            "input_dim": input_dim,
-            "rnn_dim": rnn_dim,
-            "output_dim": output_dim,
-            "embedding_keys": embedding_keys,
-            "num_embeddings": num_embeddings,
-            "embedding_dims": embedding_dims,
+            'rnn_type': rnn_type,
+            'input_dim': input_dim,
+            'rnn_dim': rnn_dim,
+            'output_dim': output_dim,
+            'embedding_keys': embedding_keys,
+            'num_embeddings': num_embeddings,
+            'embedding_dims': embedding_dims,
         }
 
     def train(self, train_set: Dataset, test_set: Dataset,
-              device: str = "cpu", batch_size: Optional[int] = None, max_num_epoch: int = 1000, early_stopping: Optional[int] = None,
-              criterion: str = "CrossEntropy", optimizer: str = "SGD", lr: float = 0.01, weight_decay: float = 0.01,
+              device: str = 'cpu', batch_size: Optional[int] = None, max_num_epoch: int = 1000, early_stopping: Optional[int] = None,
+              criterion: str = 'CrossEntropy', optimizer: str = 'SGD', lr: float = 0.01, weight_decay: float = 0.01,
               verbose_level: int = 0, *args, **kwargs) -> None:
         """
         Train the agent.
@@ -78,7 +78,7 @@ class RNNAgent(Agent):
         test_set : torch_data.Dataset
             The test set.
         device : str, optional
-            The device to use. Default is "cpu".
+            The device to use. Default is 'cpu'.
         batch_size : int, optional
             The batch size. Default is None.
         max_num_epoch : int
@@ -86,9 +86,9 @@ class RNNAgent(Agent):
         early_stopping : int, optional
             The number of epochs to wait before early stopping. Default is None.
         criterion : str, optional
-            The criterion to use. Default is "CrossEntropy".
+            The criterion to use. Default is 'CrossEntropy'.
         optimizer : str, optional
-            The optimizer to use. Default is "SGD".
+            The optimizer to use. Default is 'SGD'.
         lr : float, optional
             The learning rate. Default is 0.01.
         weight_decay : float, optional
@@ -102,33 +102,33 @@ class RNNAgent(Agent):
 
         Notes
         -----
-        The criterion can be either "CrossEntropy".
-        The optimizer can be either "SGD" or "AdamW".
+        The criterion can be either 'CrossEntropy'.
+        The optimizer can be either 'SGD' or 'AdamW'.
         """
 
         self._hyperparameters |= {
-            "device": device,
-            "batch_size": batch_size,
-            "max_epochs": max_num_epoch,
-            "early_stopping": early_stopping,
-            "criterion": criterion,
-            "optimizer": optimizer,
-            "lr": lr,
-            "weight_decay": weight_decay,
-            "verbose_level": verbose_level,
+            'device': device,
+            'batch_size': batch_size,
+            'max_epochs': max_num_epoch,
+            'early_stopping': early_stopping,
+            'criterion': criterion,
+            'optimizer': optimizer,
+            'lr': lr,
+            'weight_decay': weight_decay,
+            'verbose_level': verbose_level,
         }
 
-        _device = self._hyperparameters["device"]
-        _embedding_keys = self._hyperparameters["embedding_keys"]
+        _device = self._hyperparameters['device']
+        _embedding_keys = self._hyperparameters['embedding_keys']
 
-        if criterion == "CrossEntropy":
-            criterion = nn.CrossEntropyLoss(reduction = "none")
+        if criterion == 'CrossEntropy':
+            criterion = nn.CrossEntropyLoss(reduction = 'none')
         else:
             raise NotImplementedError
 
-        if optimizer == "SGD":
+        if optimizer == 'SGD':
             optimizer = optim.SGD(self._model.parameters(), lr = lr, weight_decay = weight_decay)
-        elif optimizer == "AdamW":
+        elif optimizer == 'AdamW':
             optimizer = optim.AdamW(self._model.parameters(), lr = lr, weight_decay = weight_decay)
         else:
             raise NotImplementedError
@@ -136,7 +136,7 @@ class RNNAgent(Agent):
         writer = SummaryWriter(str(self._tensorboard_rdir / self._name)) if self._tensorboard_rdir is not None and self._name is not None else None
 
         model = self._model.to(_device)
-        best_loss = float("inf")
+        best_loss = float('inf')
         early_stopping_counter = 0
         train_loader = torch_data.DataLoader(train_set, batch_size = batch_size, shuffle = False)
         test_loader = torch_data.DataLoader(test_set, batch_size = len(test_set), shuffle = False)
@@ -147,11 +147,11 @@ class RNNAgent(Agent):
             total_train_trials = 0
             with torch.enable_grad():
                 for i, data in enumerate(train_loader):
-                    x = data["input"].to(_device)
-                    y = data["output"].to(_device)
-                    m = data["mask"].to(_device)
+                    x = data['input'].to(_device)
+                    y = data['output'].to(_device)
+                    m = data['mask'].to(_device)
                     if _embedding_keys is not None:
-                        x = tuple([x, torch.stack([data[key] for key in self._hyperparameters["embedding_keys"]]).transpose(0, 1).to(_device)])
+                        x = tuple([x, torch.stack([data[key] for key in self._hyperparameters['embedding_keys']]).transpose(0, 1).to(_device)])
                     optimizer.zero_grad()
                     y_hat = model(x)
                     loss = (criterion(y_hat.flatten(end_dim = -2), y.flatten()) * m.flatten()).sum() / m.flatten().sum()
@@ -168,11 +168,11 @@ class RNNAgent(Agent):
             total_test_trials = 0
             with torch.no_grad():
                 for i, data in enumerate(test_loader):
-                    x = data["input"].to(_device)
-                    y = data["output"].to(_device)
-                    m = data["mask"].to(_device)
+                    x = data['input'].to(_device)
+                    y = data['output'].to(_device)
+                    m = data['mask'].to(_device)
                     if _embedding_keys is not None:
-                        x = tuple([x, torch.stack([data[key] for key in self._hyperparameters["embedding_keys"]]).transpose(0, 1).to(_device)])
+                        x = tuple([x, torch.stack([data[key] for key in self._hyperparameters['embedding_keys']]).transpose(0, 1).to(_device)])
                     y_hat = model(x)
                     loss = (criterion(y_hat.reshape(-1, y_hat.shape[2]), y.flatten()) * m.flatten()).sum() / m.flatten().sum()
                     total_test_loss += loss.item() * m.flatten().sum().item()
@@ -197,8 +197,8 @@ class RNNAgent(Agent):
             test_loss = total_test_loss / total_test_trials
 
             if writer is not None:
-                writer.add_scalar("Loss/train", train_loss, e)
-                writer.add_scalar("Loss/test", test_loss, e)
+                writer.add_scalar(f"Loss/train", train_loss, e)
+                writer.add_scalar(f"Loss/test", test_loss, e)
 
             if verbose_level >= 2:
                 print(f"Epoch {e} / {max_num_epoch}: Train loss: {train_loss}; Test loss: {test_loss}.")
@@ -227,17 +227,17 @@ class RNNAgent(Agent):
         -----
         The _output will be a tensor of shape (pred_size, seq_len, output_dim).
         """
-        _device = self._hyperparameters["device"]
-        _embedding_keys = self._hyperparameters["embedding_keys"]
+        _device = self._hyperparameters['device']
+        _embedding_keys = self._hyperparameters['embedding_keys']
 
         pred_loader = torch_data.DataLoader(pred_set, batch_size = len(pred_set), shuffle = False)
         self._model.eval()
         with torch.no_grad():
             data = next(iter(pred_loader))  # type: x: torch.Tensor[batch, seq, _input]; m: torch.Tensor[batch, seq]
-            x = data["input"].to(_device)
-            m = data["mask"].to(_device)
+            x = data['input'].to(_device)
+            m = data['mask'].to(_device)
             if _embedding_keys is not None:
-                x = tuple([x, torch.stack([data[key] for key in self._hyperparameters["embedding_keys"]]).transpose(0, 1).to(_device)])
+                x = tuple([x, torch.stack([data[key] for key in self._hyperparameters['embedding_keys']]).transpose(0, 1).to(_device)])
             y_hat = self._model(x)  # type: torch.Tensor[batch, seq, _output]
             y_hat = y_hat * m.unsqueeze(-1)
         return y_hat
@@ -279,7 +279,7 @@ class RNNAgent(Agent):
         save_dir.mkdir(parents = True, exist_ok = True)
 
         hp_path = save_dir / "hyperparameters.json"
-        with open(hp_path, "w") as f:
+        with open(hp_path, 'w') as f:
             json.dump(self._hyperparameters, f, indent = 4)
 
         model_path = save_dir / "model.pt"

@@ -17,7 +17,7 @@ tensorboard_rdir = Path(r"tensorboard/unittest/CVTrainer")
 save_rdir = Path(r"save/unittest")
 # ------------------------------------------------------------------------
 
-print(f"CV Trainer - Unit test:")
+print("CV Trainer - Unit test:")
 
 print("Setting random seed...")
 torch.manual_seed(torch_seed)
@@ -32,26 +32,26 @@ print("Done!")
 print()
 
 print("Creating trainer...")
-with open(config_rdir / "unittest_CVTrainer.json", "r") as f:
+with open(config_rdir / "unittest_CVTrainer.json", 'r') as f:
     trainer_config = json.load(f)
-if "embedding_keys" in trainer_config["agent_model"]["args"]:
+if 'embedding_keys' in trainer_config['agent_model']['args']:
     num_unique = dataset.get_num_unique()
-    trainer_config["agent_model"]["args"]["num_embeddings"] = []
-    for k in trainer_config["agent_model"]["args"]["embedding_keys"]:
-        trainer_config["agent_model"]["args"]["num_embeddings"].append(num_unique[k])
-trainer = CVTrainer(**trainer_config["trainer"])
+    trainer_config['agent_model']['args']['num_embeddings'] = []
+    for k in trainer_config['agent_model']['args']['embedding_keys']:
+        trainer_config['agent_model']['args']['num_embeddings'].append(num_unique[k])
+trainer = CVTrainer(**trainer_config['trainer'])
 print("Done!")
 print()
 
-print(f"Function test:")
+print("Function test:")
 
-print(f"Train:")
-trainer.train(dataset, trainer_config["agent_model"], trainer_config["agent_training"], tensorboard_rdir = tensorboard_rdir, **trainer_config["trainer_training"])
+print("Train:")
+trainer.train(dataset, trainer_config['agent_model'], trainer_config['agent_training'], tensorboard_rdir = tensorboard_rdir, **trainer_config['trainer_training'])
 print("Done!")
 print()
 
 print("Save:")
-save_dir = save_rdir / trainer_config["trainer"]["name"]
+save_dir = save_rdir / trainer_config['trainer']['name']
 trainer.save(save_dir)
 print("Done!")
 print()
