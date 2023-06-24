@@ -1,4 +1,5 @@
-from typing import Any, Dict
+from functools import reduce
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -36,22 +37,20 @@ class DezfouliDataset(Dataset):
         return next(iter(self._data.values())).shape[0]
 
     def __getitem__(self, idx: Any) -> Dict:
-        return {k: v[idx] for k, v in self._data.items()}
-
-    def get_num_unique(self) -> Dict:
-        """
-        Get the number of unique values for each column.
-
-        Returns
-        -------
-        Dict
-            The number of unique values for each column.
-        """
-        num_unique = {k: len(np.unique(v)) for k, v in self._data.items()}
-        return num_unique
+        if isinstance(idx, str):  # Return all values of the property.
+            return self._data[idx]
+        if isinstance(idx, dict):  # Return items based on the query dictionary (convert into indices).
+            # Items whose values are contained in the corresponding list for all given keys are selected.
+            idx = reduce(lambda x, y: x & y, [np.isin(self._data[k], v) for k, v in idx.items()])
+        return {k: v[idx] for k, v in self._data.items()}  # Return items based on indices.
 
     def _load_original_data(self) -> pd.DataFrame:
-        raw = pd.read_csv(self._src_path).groupby(['ID', 'block']).agg(list)
+        raw = pd.read_csv(self._src_path)
+
+        assert 'ID' in raw.columns
+        raw.rename(columns = {'ID': 'subject_id'}, inplace = True)
+
+        raw = raw.groupby(['subject_id', 'block']).agg(list)
 
         assert 'key' in raw.columns
         raw.rename(columns = {'key': 'action'}, inplace = True)
@@ -74,7 +73,7 @@ class DezfouliDataset(Dataset):
         block_diagnosis_is_consistent = raw['diagnosis'].apply(lambda x: len(pd.unique(x)) == 1).all()
         assert block_diagnosis_is_consistent, f"Inconsistent diagnosis within a block."
         raw['diagnosis'] = raw['diagnosis'].apply(lambda x: x[0])
-        subject_diagnosis_is_consistent = raw['diagnosis'].groupby(['ID']).agg(list).apply(lambda x: len(pd.unique(x)) == 1).all()
+        subject_diagnosis_is_consistent = raw['diagnosis'].groupby(['subject_id']).agg(list).apply(lambda x: len(pd.unique(x)) == 1).all()
         assert subject_diagnosis_is_consistent, f"Inconsistent diagnosis within a subject."
 
         raw['reward_count'] = raw['reward'].apply(lambda x: sum(x))
@@ -86,8 +85,8 @@ class DezfouliDataset(Dataset):
         raw['reward'] = raw['reward'].apply(lambda x: x + [0] * (max_len - len(x)))
 
         raw.reset_index(inplace = True)
-        sid_no_map = {sid: no for no, sid in enumerate(raw['ID'].unique())}
-        raw['no'] = raw['ID'].apply(lambda x: sid_no_map[x])
+        sid_no_map = {sid: no for no, sid in enumerate(raw['subject_id'].unique())}
+        raw['subject_no'] = raw['subject_id'].apply(lambda x: sid_no_map[x])
         block_no_map = {block: no for no, block in enumerate(raw['block'].unique())}
         raw['block_no'] = raw['block'].apply(lambda x: block_no_map[x])
         diag_no_map = {diag: no for no, diag in enumerate(raw['diagnosis'].unique())}
@@ -100,14 +99,15 @@ class DezfouliDataset(Dataset):
         reward = torch.tensor(np.stack(self._original_data['reward'].values))
         mask = torch.tensor(np.stack(self._original_data['mask'].values))
 
+        # All keys must be strings, all values must be either np.ndarray or torch.Tensor.
         data = {
             'input': torch.stack((action[:, :-1], reward[:, :-1]), dim = 2).to(dtype = torch.float32),  # type: torch.Tensor[batch, seq, 2]
             'output': action[:, 1:].to(dtype = torch.int64),  # type: torch.Tensor[batch, seq]
             'mask': mask[:, 1:].to(dtype = torch.bool),  # type: torch.Tensor[batch, seq]
-            'subject_id': self._original_data['ID'].values,
+            'subject_id': self._original_data['subject_id'].values,
             'block': self._original_data['block'].values,
             'diagnosis': self._original_data['diagnosis'].values,
-            'subject_no': torch.tensor(self._original_data['no'].values),
+            'subject_no': torch.tensor(self._original_data['subject_no'].values),
             'block_no': torch.tensor(self._original_data['block_no'].values),
             'diagnosis_no': torch.tensor(self._original_data['diagnosis_no'].values),
             'reward_count': torch.tensor(self._original_data['reward_count'].values),

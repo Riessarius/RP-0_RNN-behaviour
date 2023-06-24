@@ -43,19 +43,22 @@ print("Done!")
 print()
 
 print("Get Item:")
-sample_item = dataset[list(range(10))]
-print(f"Item keys: {sample_item.keys()}")
-print(f"Input shape:{sample_item['input'].shape}; Output shape:{sample_item['output'].shape}; Mask shape:{sample_item['mask'].shape}.")
+print(f"Obtain specific property:")
+idx = 'subject_id'
+print(f"Values of property {idx}: {dataset[idx]}.")
+print(f"Obtain data with indices:")
+idx = list(range(10))
+idx_sample = dataset[idx]
+print(f"Item keys: {idx_sample.keys()}")
+print(f"Input shape:{idx_sample['input'].shape}; Output shape:{idx_sample['output'].shape}; Mask shape:{idx_sample['mask'].shape}.")
+print(f"Obtain data with criteria:")
+query = {
+    'subject_no': list(range(10)),
+    'block_no': list(range(10)),
+}
+query_sample = dataset[query]
+print(f"Item keys: {query_sample.keys()}")
+print(f"Input shape:{query_sample['input'].shape}; Output shape:{query_sample['output'].shape}; Mask shape:{query_sample['mask'].shape}.")
 print("Done!")
 print()
 
-print("Get Subset:")
-subset = dataset.subset(list(range(100)))
-print(f"Subset length: {len(subset)}")
-print("Done!")
-print()
-
-print("Get numbers of unique values of each property:")
-print(dataset.get_num_unique())
-print("Done!")
-print()
