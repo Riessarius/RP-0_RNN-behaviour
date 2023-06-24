@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-import os
 from pathlib import Path
 import pickle
-from typing import Optional
+from typing import Dict, List, Optional
 
 
 class Investigator(ABC):
@@ -25,6 +24,10 @@ class Investigator(ABC):
         self._agent_names = []
         self._info = []
         pass
+
+    @property
+    def info(self) -> List[Dict]:
+        return self._info
 
     @abstractmethod
     def investigate(self, *args, **kwargs) -> None:

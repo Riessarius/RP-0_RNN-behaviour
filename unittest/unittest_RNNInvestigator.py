@@ -57,7 +57,7 @@ print()
 print("Function test:")
 
 print("Investigate:")
-agents = trainer[:][0]
+agents = trainer.agents
 investigator.investigate(agents, dataset)
 print("Done!")
 print()

@@ -38,8 +38,13 @@ class Trainer(ABC):
         self._configs = []
         pass
 
-    def __getitem__(self, idx: int) -> Tuple[Agent, Dict]:
-        return self._agents[idx], self._configs[idx]
+    @property
+    def agents(self) -> List[Agent]:
+        return self._agents
+
+    @property
+    def configs(self) -> List[Dict]:
+        return self._configs
 
     @abstractmethod
     def train(self, *args, **kwargs) -> None:
