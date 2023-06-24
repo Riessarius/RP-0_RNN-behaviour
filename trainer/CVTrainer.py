@@ -2,7 +2,7 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Dict, Optional
 
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, StratifiedKFold
 from torch.utils.data import Subset
 
 import agent
@@ -39,7 +39,7 @@ class CVTrainer(Trainer):
         super().__init__(name, *args, **kwargs)
 
     def train(self, dataset: Dataset, agent_model_config: Dict, agent_training_config: Dict,
-              n_splits: int = 5, shuffle: bool = True, random_state: Optional[int] = None,
+              split_config: Dict, n_splits: int = 5, shuffle: bool = True, random_state: Optional[int] = None,
               verbose_level: int = 0, tensorboard_rdir: Optional[Path] = None, *args, **kwargs) -> None:
         """
         Train the agent using cross validation.
@@ -52,6 +52,8 @@ class CVTrainer(Trainer):
             The agent model configuration.
         agent_training_config : Dict
             The agent training configuration.
+        split_config : Dict
+            The split configuration.
         n_splits : int, optional
             The number of splits. Default is 5.
         shuffle : bool, optional
@@ -75,8 +77,16 @@ class CVTrainer(Trainer):
         train_dataset = deepcopy(dataset.set_mode('train'))
         test_dataset = deepcopy(dataset.set_mode('test'))
 
-        kf = KFold(n_splits = n_splits, shuffle = shuffle, random_state = random_state)
-        for f, (train_indices, test_indices) in enumerate(kf.split(dataset)):
+        if split_config['mode'] == 'KFold':
+            kf = KFold(n_splits = n_splits, shuffle = shuffle, random_state = random_state)
+            kfsp = kf.split(dataset)
+        elif split_config['mode'] == 'StratifiedKFold':
+            kf = StratifiedKFold(n_splits = n_splits, shuffle = shuffle, random_state = random_state)
+            kfsp = kf.split(dataset, dataset[split_config['label']])
+        else:
+            raise NotImplementedError
+
+        for f, (train_indices, test_indices) in enumerate(kfsp):
             if verbose_level >= 1:
                 print(f"Cross validation - Fold {f}: Train size: {len(train_indices)}; Test size: {len(test_indices)}.")
 

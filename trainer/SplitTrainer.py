@@ -38,7 +38,7 @@ class SplitTrainer(Trainer):
         super().__init__(name, *args, **kwargs)
 
     def train(self, dataset: Dataset, agent_model_config: Dict, agent_training_config: Dict,
-              test_ratio: float = 0.2, shuffle: bool = True, random_state: Optional[int] = None,
+              split_config: Dict, test_ratio: float = 0.2, shuffle: bool = True, random_state: Optional[int] = None,
               verbose_level: int = 0, tensorboard_rdir: Optional[Path] = None, *args, **kwargs) -> None:
         """
         Train the agent using train-test split.
@@ -51,6 +51,8 @@ class SplitTrainer(Trainer):
             The agent model configuration.
         agent_training_config : Dict
             The agent training configuration.
+        split_config : Dict
+            The split configuration.
         test_ratio : float, optional
             The ratio of the test set. Default is 0.2.
         shuffle : bool, optional
@@ -75,7 +77,13 @@ class SplitTrainer(Trainer):
         train_dataset = deepcopy(dataset.set_mode('train'))
         test_dataset = deepcopy(dataset.set_mode('test'))
 
-        train_indices, test_indices = train_test_split(range(len(dataset)), test_size = test_ratio, shuffle = shuffle, random_state = random_state)
+        if split_config['mode'] == 'Split':
+            train_indices, test_indices = train_test_split(range(len(dataset)), test_size = test_ratio, shuffle = shuffle, random_state = random_state)
+        elif split_config['mode'] == 'StratifiedSplit':
+            train_indices, test_indices = train_test_split(range(len(dataset)), test_size = test_ratio, shuffle = True,
+                                                           random_state = random_state, stratify = dataset[split_config['label']])
+        else:
+            raise NotImplementedError
 
         if verbose_level >= 1:
             print(f"Random split: Train size: {len(train_indices)}; Test size: {len(test_indices)}.")
