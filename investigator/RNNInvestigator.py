@@ -4,7 +4,6 @@ import torch
 from torch.utils import data as torch_data
 
 from agent import Agent
-from utils import demask, structural_tensor_to_numpy as s_t2n
 from .Investigator import Investigator
 
 
@@ -16,16 +15,16 @@ class RNNInvestigator(Investigator):
 
     Attributes
     ----------
-    _agent_name : str
-        The name of the agent.
-    _output : torch.tensor
-        The _output of the agent.
-    _internal_state : Any
-        The internal state of the agent.
+    _name : Optional[str]
+        The name of the investigator.
+    _agent_names : List[str]
+        The names of the agents.
+    _info : List[Dict]
+        The information of the agents.
 
     Methods
     -------
-    investigate(agent: Agent, dataset: Dataset, *args, **kwargs) -> None
+    investigate(agents: List[Agent], dataset: torch_data.Dataset, *args, **kwargs) -> None
         Investigate the agent.
     """
     def __init__(self, name: Optional[str] = None, *args, **kwargs) -> None:
@@ -49,13 +48,11 @@ class RNNInvestigator(Investigator):
         """
         for ag in agents:
             self._agent_names.append(ag.get_name())
-
-            mask = dataset[:][2].cpu().numpy()
-            output = demask(s_t2n(ag.predict(dataset)), mask)
+            mask = dataset['mask']
+            output = ag.predict(dataset)
             internal_state = ag.get_internal_state()
-            internal_state['rnn_output'] = demask(s_t2n(internal_state['rnn_output']), mask)
-            internal_state['final_rnn_state'] = s_t2n(internal_state['final_rnn_state'])
             info = {
+                'mask': mask,
                 'output': output,
                 'internal_state': internal_state,
             }

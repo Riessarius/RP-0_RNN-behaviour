@@ -48,12 +48,10 @@ class Investigator(ABC):
         ----------
         save_dir : Path
             The directory to save the investigation.
-
-        Returns
-        -------
-
         """
-        save_dir.mkdir(parents = True, exist_ok = True)
         for i, info in enumerate(self._info):
+            agent_dir = save_dir / f"{self._agent_names[i]}_{self._name}"
+            agent_dir.mkdir(parents = True, exist_ok = True)
             for k, v in info.items():
-                pickle.dump(v, open(save_dir / f"{self._agent_names[i]}_{self._name}_{k}.pkl", 'wb'))
+                with open(agent_dir / f"{k}.pkl", 'b') as f:
+                    pickle.dump(v, f)
