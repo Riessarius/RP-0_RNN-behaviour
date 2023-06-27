@@ -5,6 +5,7 @@ from typing import Dict, List, Tuple, Union
 import numpy as np
 import torch
 
+from dataset import Dataset
 
 def to_rdir(name: str = 'RP#0_RNN-behaviour'):
     curr_path = Path.cwd()
@@ -38,3 +39,11 @@ def demask(array: np.ndarray, mask: np.ndarray) -> List[np.ndarray]:
     assert array.shape[:2] == mask.shape, f"The first 2 components of shape of the processed array {array.shape} does not match the shape of the mask {mask.shape}."
 
     return [array[i, mask[i].astype(bool)] for i in range(array.shape[0])]
+
+
+def get_num_embeddings(dataset: Dataset, embedding_keys: List[str]) -> List[int]:
+    num_embeddings = []
+    for k in embedding_keys:
+        num_unique = len(np.unique(dataset[k]))
+        num_embeddings.append(num_unique)
+    return num_embeddings

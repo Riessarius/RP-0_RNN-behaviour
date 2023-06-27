@@ -2,12 +2,11 @@ import datetime
 import json
 from pathlib import Path
 
-import numpy as np
 import torch
 
 from dataset import DezfouliDataset
 from trainer import SplitTrainer
-from utils import to_rdir
+from utils import get_num_embeddings, to_rdir
 
 to_rdir()
 
@@ -39,10 +38,7 @@ print("Creating trainer...")
 with open(config_rdir / "unittest_SplitTrainer.json", 'r') as f:
     trainer_config = json.load(f)
 if 'embedding_keys' in trainer_config['agent_model']['args']:
-    trainer_config['agent_model']['args']['num_embeddings'] = []
-    for k in trainer_config['agent_model']['args']['embedding_keys']:
-        num_unique = len(np.unique(dataset[k]))
-        trainer_config['agent_model']['args']['num_embeddings'].append(num_unique)
+    trainer_config['agent_model']['args']['num_embeddings'] = get_num_embeddings(dataset, trainer_config['agent_model']['args']['embedding_keys'])
 trainer = SplitTrainer(**trainer_config['trainer'])
 print("Done!")
 print()

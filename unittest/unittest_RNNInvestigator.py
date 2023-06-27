@@ -7,7 +7,7 @@ import torch
 from dataset import DezfouliDataset
 from investigator import RNNInvestigator
 from trainer import CVTrainer
-from utils import to_rdir
+from utils import get_num_embeddings, to_rdir
 
 to_rdir()
 
@@ -39,10 +39,7 @@ print("Creating trainer...")
 with open(config_rdir / "unittest_CVTrainer.json", 'r') as f:
     trainer_config = json.load(f)
 if 'embedding_keys' in trainer_config['agent_model']['args']:
-    num_unique = dataset.get_num_unique()
-    trainer_config['agent_model']['args']['num_embeddings'] = []
-    for k in trainer_config['agent_model']['args']['embedding_keys']:
-        trainer_config['agent_model']['args']['num_embeddings'].append(num_unique[k])
+    trainer_config['agent_model']['args']['num_embeddings'] = get_num_embeddings(dataset, trainer_config['agent_model']['args']['embedding_keys'])
 trainer = CVTrainer(**trainer_config['trainer'])
 print("Done!")
 print()
