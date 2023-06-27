@@ -13,9 +13,12 @@ to_rdir()
 
 # ---------------------------- Configuration ----------------------------
 torch_seed = 20230331
-config_rdir = Path(r"config/unittest")
-tensorboard_rdir = Path(r"tensorboard/unittest/RNNInvestigator")
-save_rdir = Path(r"save/unittest")
+uid = None
+if uid is None:
+    uid = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+config_rdir = Path(f"config/unittest")
+tensorboard_rdir = Path(f"tensorboard/unittest/{uid}_RNNInvestigator")
+save_rdir = Path(f"save/unittest/{uid}_RNNInvestigator")
 # ------------------------------------------------------------------------
 
 print("RNN Investigator - Unit test:")
