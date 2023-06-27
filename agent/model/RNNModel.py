@@ -46,6 +46,7 @@ class RNNModel(nn.Module):
             x = torch.cat([original_input, embedded_info], dim = -1)
         else:
             assert isinstance(x, torch.Tensor), f"The input without embeddings must be a tensor."
+        self._rnn.flatten_parameters()
         r, s = self._rnn(x)
         o = self._lin(r)
         self._rnn_output, self._final_rnn_state = r, s
