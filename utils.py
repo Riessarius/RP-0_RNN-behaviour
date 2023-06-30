@@ -44,6 +44,6 @@ def demask(array: np.ndarray, mask: np.ndarray) -> List[np.ndarray]:
 def get_num_embeddings(dataset: Dataset, embedding_keys: List[str]) -> List[int]:
     num_embeddings = []
     for k in embedding_keys:
-        num_unique = len(np.unique(dataset[k]))
+        num_unique = len(np.unique(dataset.get_by_prop(k)))
         num_embeddings.append(num_unique)
     return num_embeddings

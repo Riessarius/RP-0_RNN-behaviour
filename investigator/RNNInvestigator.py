@@ -1,9 +1,7 @@
 from typing import List, Optional
 
-import torch
-from torch.utils import data as torch_data
-
 from agent import Agent
+from dataset import Dataset
 from .Investigator import Investigator
 
 
@@ -30,7 +28,7 @@ class RNNInvestigator(Investigator):
     def __init__(self, name: Optional[str] = None, *args, **kwargs) -> None:
         super().__init__(name, *args, **kwargs)
 
-    def investigate(self, agents: List[Agent], dataset: torch_data.Dataset,
+    def investigate(self, agents: List[Agent], dataset: Dataset,
                     *args, **kwargs) -> None:
         """
         Investigate the agent.
@@ -39,7 +37,7 @@ class RNNInvestigator(Investigator):
         ----------
         agents : Agent
             The agents to investigate.
-        dataset : torch_data.Dataset
+        dataset : Dataset
             The datasets to investigate.
 
         Returns
@@ -48,7 +46,7 @@ class RNNInvestigator(Investigator):
         """
         for ag in agents:
             self._agent_names.append(ag.get_name())
-            mask = dataset['mask']
+            mask = dataset.get_by_prop('mask')
             output = ag.predict(dataset)
             internal_state = ag.get_internal_state()
             info = {

@@ -1,11 +1,10 @@
-from functools import reduce
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
 import torch
 
-from dataset import Dataset
+from .Dataset import Dataset
 
 
 class DezfouliDataset(Dataset):
@@ -30,19 +29,8 @@ class DezfouliDataset(Dataset):
     def __init__(self, src_path: str, default_mode: str = 'default', *args, **kwargs) -> None:
         super().__init__(default_mode, *args, **kwargs)
         self._src_path = src_path
-        self._original_data = self._load_original_data()  # type: pd.DataFrame
+        self._original_data = self._load_original_data()  # type = pd.DataFrame
         self._data = self._generate_data()
-
-    def __len__(self) -> int:
-        return next(iter(self._data.values())).shape[0]
-
-    def __getitem__(self, idx: Any) -> Dict:
-        if isinstance(idx, str):  # Return all values of the property.
-            return self._data[idx]
-        if isinstance(idx, dict):  # Return items based on the query dictionary (convert into indices).
-            # Items whose values are contained in the corresponding list for all given keys are selected.
-            idx = reduce(lambda x, y: x & y, [np.isin(self._data[k], v) for k, v in idx.items()])
-        return {k: v[idx] for k, v in self._data.items()}  # Return items based on indices.
 
     def _load_original_data(self) -> pd.DataFrame:
         raw = pd.read_csv(self._src_path)
@@ -101,9 +89,9 @@ class DezfouliDataset(Dataset):
 
         # All keys must be strings, all values must be either np.ndarray or torch.Tensor.
         data = {
-            'input': torch.stack((action[:, :-1], reward[:, :-1]), dim = 2).to(dtype = torch.float32),  # type: torch.Tensor[batch, seq, 2]
-            'output': action[:, 1:].to(dtype = torch.int64),  # type: torch.Tensor[batch, seq]
-            'mask': mask[:, 1:].to(dtype = torch.bool),  # type: torch.Tensor[batch, seq]
+            'input': torch.stack((action[:, :-1], reward[:, :-1]), dim = 2).to(dtype = torch.float32),  # type = torch.Tensor, shape = (batch, seq, 2)
+            'output': action[:, 1:].to(dtype = torch.int64),  # type = torch.Tensor, shape = (batch, seq)
+            'mask': mask[:, 1:].to(dtype = torch.bool),  # type = torch.Tensor, shape = (batch, seq)
             'subject_id': self._original_data['subject_id'].values,
             'block': self._original_data['block'].values,
             'diagnosis': self._original_data['diagnosis'].values,

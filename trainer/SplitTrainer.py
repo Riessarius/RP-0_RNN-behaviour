@@ -1,9 +1,7 @@
-from copy import deepcopy
 from pathlib import Path
 from typing import Dict, Optional
 
 from sklearn.model_selection import train_test_split
-from torch.utils.data import Subset
 
 import agent
 from dataset import Dataset
@@ -74,9 +72,6 @@ class SplitTrainer(Trainer):
             'verbose_level': verbose_level,
         }
 
-        train_dataset = deepcopy(dataset.set_mode('train'))
-        test_dataset = deepcopy(dataset.set_mode('test'))
-
         if split_config['mode'] == 'Split':
             train_indices, test_indices = train_test_split(range(len(dataset)), test_size = test_ratio, shuffle = shuffle, random_state = random_state)
         elif split_config['mode'] == 'StratifiedSplit':
@@ -91,8 +86,8 @@ class SplitTrainer(Trainer):
         agent_model_config['args']['name'] = f"{agent_model_config['common_name']}_{self._name}"
         agent_model_config['args']['tensorboard_rdir'] = tensorboard_rdir
         ag = agent.FromString(agent_model_config['class'])(**agent_model_config['args'])
-        train_subset = Subset(train_dataset, train_indices)
-        test_subset = Subset(test_dataset, test_indices)
+        train_subset = dataset.subset(train_indices).set_mode('train')
+        test_subset = dataset.subset(test_indices).set_mode('test')
         ag.train(train_subset, test_subset, **agent_training_config)
         self._agents.append(ag)
 
