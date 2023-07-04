@@ -1,4 +1,5 @@
 import json
+import jsbeautifier
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from copy import deepcopy
@@ -280,7 +281,9 @@ class RNNAgent(Agent):
 
         hp_path = save_dir / "hyperparameters.json"
         with open(hp_path, 'w') as f:
-            json.dump(self._hyperparameters, f, indent = 4)
+            opts = jsbeautifier.default_options()
+            opts.indent_size = 4
+            f.write(jsbeautifier.beautify(json.dumps(self._hyperparameters), opts))
 
         model_path = save_dir / "model.pt"
         torch.save(self._model.state_dict(), model_path)
