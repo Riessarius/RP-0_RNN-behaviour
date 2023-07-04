@@ -72,11 +72,14 @@ class SplitTrainer(Trainer):
             'verbose_level': verbose_level,
         }
 
-        if split_config['mode'] == 'Split':
+        if split_config['mode'] == 'Free':
             train_indices, test_indices = train_test_split(range(len(dataset)), test_size = test_ratio, shuffle = shuffle, random_state = random_state)
-        elif split_config['mode'] == 'StratifiedSplit':
+        elif split_config['mode'] == 'Stratified':
             train_indices, test_indices = train_test_split(range(len(dataset)), test_size = test_ratio, shuffle = True,
                                                            random_state = random_state, stratify = dataset[split_config['label']])
+        elif split_config['mode'] == 'Designated':
+            train_indices = split_config['train_indices']
+            test_indices = split_config['test_indices']
         else:
             raise NotImplementedError
 

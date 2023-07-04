@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Dict, Optional
 
-from sklearn.model_selection import KFold, StratifiedKFold
+from sklearn.model_selection import KFold, PredefinedSplit,StratifiedKFold
 
 import agent
 from dataset import Dataset
@@ -72,16 +72,18 @@ class CVTrainer(Trainer):
             'verbose_level': verbose_level,
         }
 
-        if split_config['mode'] == 'KFold':
+        if split_config['mode'] == 'Free':
             kf = KFold(n_splits = n_splits, shuffle = shuffle, random_state = random_state)
-            kfsp = kf.split(dataset)
-        elif split_config['mode'] == 'StratifiedKFold':
+            sp = kf.split(dataset)
+        elif split_config['mode'] == 'Stratified':
             kf = StratifiedKFold(n_splits = n_splits, shuffle = shuffle, random_state = random_state)
-            kfsp = kf.split(dataset, dataset.get_by_prop(split_config['label']))
+            sp = kf.split(dataset, dataset.get_by_prop(split_config['label']))
+        elif split_config['mode'] == 'Designated':
+            sp = PredefinedSplit(split_config['test_fold_no'])
         else:
             raise NotImplementedError
 
-        for f, (train_indices, test_indices) in enumerate(kfsp):
+        for f, (train_indices, test_indices) in enumerate(sp):
             if verbose_level >= 1:
                 print(f"Cross validation - Fold {f}: Train size: {len(train_indices)}; Test size: {len(test_indices)}.")
 
