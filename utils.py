@@ -7,7 +7,11 @@ import torch
 
 from dataset import Dataset
 
+
 def to_rdir(name: str = 'RP#0_RNN-behaviour'):
+    """
+    Change the current working directory to the root directory of the project.
+    """
     curr_path = Path.cwd()
     while len(curr_path.name) and curr_path.name != name:
         curr_path = curr_path.parent
@@ -19,7 +23,9 @@ def to_rdir(name: str = 'RP#0_RNN-behaviour'):
 
 
 def structural_tensor_to_numpy(obj: Union[Dict, List, Tuple, torch.tensor]) -> Union[Dict, List, Tuple, np.ndarray]:
-    """Convert all tensors (nested) in best_model_pass to numpy arrays."""
+    """
+    Convert all tensors (nested) in best_model_pass to numpy arrays.
+    """
     if isinstance(obj, dict):
         obj_new = {k: structural_tensor_to_numpy(v) for k, v in obj.items()}
     elif isinstance(obj, list):
@@ -36,12 +42,18 @@ def structural_tensor_to_numpy(obj: Union[Dict, List, Tuple, torch.tensor]) -> U
 
 
 def demask(array: np.ndarray, mask: np.ndarray) -> List[np.ndarray]:
+    """
+    Demask the array according to the mask.
+    """
     assert array.shape[:2] == mask.shape, f"The first 2 components of shape of the processed array {array.shape} does not match the shape of the mask {mask.shape}."
 
     return [array[i, mask[i].astype(bool)] for i in range(array.shape[0])]
 
 
 def get_num_embeddings(dataset: Dataset, embedding_keys: List[str]) -> List[int]:
+    """
+    Get the number of unique embeddings for each embedding key.
+    """
     num_embeddings = []
     for k in embedding_keys:
         num_unique = len(np.unique(dataset.get_by_prop(k)))
