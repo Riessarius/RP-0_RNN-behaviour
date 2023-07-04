@@ -7,13 +7,13 @@ from utils import to_rdir
 to_rdir()
 
 # ---------------------------- Configuration ----------------------------
-config_rdir = Path(r"config/unittest")
+config_rdir = Path(r"config/unittest/DezfouliDataset")
 # ------------------------------------------------------------------------
 
 print("Dezfouli Dataset - Unit test:")
 
 print("Loading dataset...")
-with open(config_rdir / "unittest_DezfouliDataset.json", "r") as f:
+with open(config_rdir / "DezfouliDataset.json", "r") as f:
     dataset_config = json.load(f)
 dataset = DezfouliDataset(**dataset_config)
 print("Done!")

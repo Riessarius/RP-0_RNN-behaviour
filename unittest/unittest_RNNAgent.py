@@ -7,7 +7,7 @@ from torch.utils.data import random_split
 
 from agent import RNNAgent
 from dataset import DezfouliDataset
-from utils import to_rdir
+from utils import get_num_embeddings, to_rdir
 
 to_rdir()
 
@@ -17,7 +17,7 @@ test_ratio = 0.2
 uid = None
 if uid is None:
     uid = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-config_rdir = Path(f"config/unittest")
+config_rdir = Path(f"config/unittest/RNNAgent")
 tensorboard_rdir = Path(f"tensorboard/unittest/{uid}_RNNAgent")
 save_rdir = Path(f"save/unittest/{uid}_RNNAgent")
 # ------------------------------------------------------------------------
@@ -30,20 +30,17 @@ print("Done!")
 print()
 
 print("Loading dataset...")
-with open(config_rdir / "unittest_DezfouliDataset.json", 'r') as f:
+with open(config_rdir / "DezfouliDataset.json", 'r') as f:
     dataset_config = json.load(f)
 dataset = DezfouliDataset(**dataset_config)
 print("Done!")
 print()
 
 print("Creating agent...")
-with open(config_rdir / "unittest_RNNAgent.json", 'r') as f:
+with open(config_rdir / "RNNAgent.json", 'r') as f:
     agent_config = json.load(f)
 if 'embedding_keys' in agent_config['model']:
-    num_unique = dataset.get_num_unique()
-    agent_config['model']['num_embeddings'] = []
-    for k in agent_config['model']['embedding_keys']:
-        agent_config['model']['num_embeddings'].append(num_unique[k])
+    agent_config['model']['num_embeddings'] = get_num_embeddings(dataset, agent_config['model']['embedding_keys'])
 agent = RNNAgent(tensorboard_rdir = tensorboard_rdir, **agent_config['model'])
 print("Done!")
 print()
