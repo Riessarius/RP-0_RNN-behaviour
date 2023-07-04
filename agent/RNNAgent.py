@@ -154,7 +154,7 @@ class RNNAgent(Agent):
                         x = tuple([x, torch.stack([data[key] for key in self._hyperparameters['embedding_keys']]).transpose(0, 1).to(_device)])
                     optimizer.zero_grad()
                     y_hat = model(x)
-                    loss = (criterion(y_hat.flatten(end_dim = -2), y.flatten()) * m.flatten()).sum() / m.flatten().sum()
+                    loss = (criterion(y_hat.flatten(end_dim = -2), y.flatten(end_dim = y_hat.dim() - 2)) * m.flatten()).sum() / m.flatten().sum()
                     loss.backward()
                     optimizer.step()
                     total_train_loss += loss.item() * m.flatten().sum().item()
@@ -174,7 +174,7 @@ class RNNAgent(Agent):
                     if _embedding_keys is not None:
                         x = tuple([x, torch.stack([data[key] for key in self._hyperparameters['embedding_keys']]).transpose(0, 1).to(_device)])
                     y_hat = model(x)
-                    loss = (criterion(y_hat.reshape(-1, y_hat.shape[2]), y.flatten()) * m.flatten()).sum() / m.flatten().sum()
+                    loss = (criterion(y_hat.flatten(end_dim = -2), y.flatten(end_dim = y_hat.dim() - 2)) * m.flatten()).sum() / m.flatten().sum()
                     total_test_loss += loss.item() * m.flatten().sum().item()
                     total_test_trials += m.flatten().sum().item()
 
