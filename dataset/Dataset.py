@@ -1,3 +1,4 @@
+from abc import ABC
 from copy import copy
 from functools import reduce
 from typing import Any, Dict, List
@@ -8,7 +9,7 @@ import torch.utils.data as torch_data
 IndexType = dict | int | list | slice | np.integer | np.ndarray
 
 
-class Dataset(torch_data.Dataset):
+class Dataset(ABC, torch_data.Dataset):
     """
     Base class for all datasets.
 
@@ -84,22 +85,26 @@ class Dataset(torch_data.Dataset):
                 idx = np.arange(len(sub_indices))
             else:
                 idx = reduce(lambda x, y: x & y, [np.isin(self._data[k][sub_indices], v) for k, v in idx.items()])
-                idx = np.where(idx)[0]  # type = np.ndarray, dim = 1, dtype = np.integer
+                idx = np.where(idx)[0]  # type = np.ndarray, dim = 1, dtype = np.int_
             assert isinstance(idx, np.ndarray) and len(idx.shape) == 1 and np.issubdtype(idx.dtype, np.integer), f"Assertion broken."
             return idx
 
         if isinstance(idx, slice):
-            idx = np.arange(*idx.indices(len(self)))  # type = np.ndarray, dim = 1, dtype = np.integer
+            idx = np.arange(*idx.indices(len(self)))  # type = np.ndarray, dim = 1, dtype = np.int_
             assert isinstance(idx, np.ndarray) and len(idx.shape) == 1 and np.issubdtype(idx.dtype, np.integer), f"Assertion broken."
             return idx
 
-        if isinstance(idx, int | list | np.integer | np.ndarray):
-            idx = np.array(idx).astype(int)  # type = np.ndarray, dim unknown, dtype = np.integer
+        if isinstance(idx, int | np.integer):
+            idx = np.int_(idx)  # type = np.int_
+            return idx
+
+        if isinstance(idx, list | np.ndarray):
+            idx = np.array(idx).astype(int)  # type = np.ndarray, dim unknown, dtype = np.int_
             return idx
 
         raise ValueError(f"Unexpected index type: {type(idx)}, which cannot be transformed into np.ndarray.")
 
-    def __getitem__(self, idx: Any) -> Dict:
+    def __getitem__(self, idx: IndexType) -> Dict:
         idx = self.convert_index(idx)
         if self._sub_indices is not None:
             idx = self._sub_indices[idx]
