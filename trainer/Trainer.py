@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
-import json
-import jsbeautifier
+import json, jsbeautifier
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
-from agent import Agent
+import agent
 
 
 class Trainer(ABC):
@@ -17,7 +16,7 @@ class Trainer(ABC):
         The name of the trainer.
     _agents : List[Agent]
         The agents.
-    _configs : List[Dict]
+    _agent_configs : List[Dict]
         The configurations.
 
     Methods
@@ -32,19 +31,19 @@ class Trainer(ABC):
     This is an abstract class which must be implemented in the subclass.
     """
 
-    def __init__(self, name: Optional[str] = None, *args, **kwargs):
-        self._name = name
+    def __init__(self, config: Optional[Dict] = None, *args, **kwargs):
+        self._config = config if config is not None else {}
         self._agents = []
-        self._configs = []
+        self._agent_configs = []
         pass
 
     @property
-    def agents(self) -> List[Agent]:
+    def agents(self) -> List[agent.Agent]:
         return self._agents
 
     @property
-    def configs(self) -> List[Dict]:
-        return self._configs
+    def agent_configs(self) -> List[Dict]:
+        return self._agent_configs
 
     @abstractmethod
     def train(self, *args, **kwargs) -> None:
@@ -62,6 +61,30 @@ class Trainer(ABC):
 
         pass
 
+    def load(self, load_dir: Path, *args, **kwargs):
+        """
+        Load the configuration and generated agents.
+
+        Parameters
+        ----------
+        load_dir : Path
+            The directory to load the configuration and generated agents.
+
+        Returns
+        -------
+        None
+        """
+
+        for agent_dir in load_dir.iterdir():
+            if agent_dir.is_dir():
+                ag = agent.load(agent_dir)
+                self._agents.append(ag)
+
+                agcfg_path = load_dir / f"{ag.get_name()}_config.json"
+                with agcfg_path.open('r') as f:
+                    agcfg = json.load(f)
+                self._agent_configs.append(agcfg)
+
     def save(self, save_dir: Path, *args, **kwargs):
         """
         Save the configuration and generated agents.
@@ -77,12 +100,18 @@ class Trainer(ABC):
         """
 
         save_dir.mkdir(parents = True, exist_ok = True)
-        for i, (ag, cfg) in enumerate(zip(self._agents, self._configs)):
-            agent_dir = save_dir / ag.get_name()
-            ag.save(save_dir = agent_dir)
+        cfg_path = save_dir / f"config.json"
+        with cfg_path.open('w') as f:
+            opts = jsbeautifier.default_options()
+            opts.indent_size = 4
+            f.write(jsbeautifier.beautify(json.dumps(self._config), opts))
 
-            cfg_path = save_dir / f"{ag.get_name()}_config.json"
-            with cfg_path.open('w') as f:
+        for i, (ag, agcfg) in enumerate(zip(self._agents, self._agent_configs)):
+            agent_dir = save_dir / ag.get_name()
+            ag.save(agent_dir)
+
+            agcfg_path = save_dir / f"{ag.get_name()}_config.json"
+            with agcfg_path.open('w') as f:
                 opts = jsbeautifier.default_options()
                 opts.indent_size = 4
-                f.write(jsbeautifier.beautify(json.dumps(cfg), opts))
+                f.write(jsbeautifier.beautify(json.dumps(agcfg), opts))

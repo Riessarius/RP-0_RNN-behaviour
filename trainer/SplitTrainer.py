@@ -20,7 +20,7 @@ class SplitTrainer(Trainer):
         The name of the trainer.
     _agents : List[Agent]
         The agents.
-    _configs : List[Dict]
+    _agent_configs : List[Dict]
         The configurations.
 
     Methods
@@ -33,7 +33,11 @@ class SplitTrainer(Trainer):
         Save the configuration and generated agents.
     """
     def __init__(self, name: Optional[str] = None, *args, **kwargs) -> None:
-        super().__init__(name, *args, **kwargs)
+        config = {
+            'name': name,
+            'type': 'SplitTrainer',
+        }
+        super().__init__(config, *args, **kwargs)
 
     def train(self, dataset: Dataset, agent_model_config: Dict, agent_training_config: Dict,
               split_config: Dict, test_ratio: float = 0.2, shuffle: bool = True, random_state: Optional[int] = None,
@@ -86,16 +90,16 @@ class SplitTrainer(Trainer):
         if verbose_level >= 1:
             print(f"Random split: Train size: {len(train_indices)}; Test size: {len(test_indices)}.")
 
-        agent_model_config['args']['name'] = f"{agent_model_config['common_name']}_{self._name}"
+        agent_model_config['args']['name'] = f"{agent_model_config['common_name']}_{self._config['name']}"
         agent_model_config['args']['tensorboard_rdir'] = tensorboard_rdir
-        ag = agent.FromString(agent_model_config['class'])(**agent_model_config['args'])
+        ag = agent.generate(agent_model_config['class'])(**agent_model_config['args'])
         train_subset = dataset.subset(train_indices).set_mode('train')
         test_subset = dataset.subset(test_indices).set_mode('test')
         ag.train(train_subset, test_subset, **agent_training_config)
         self._agents.append(ag)
 
-        cfg = common_config | {
+        agcfg = common_config | {
             'train_indices': train_indices,
             'test_indices': test_indices,
         }
-        self._configs.append(cfg)
+        self._agent_configs.append(agcfg)

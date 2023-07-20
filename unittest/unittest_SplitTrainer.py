@@ -5,6 +5,7 @@ from pathlib import Path
 import torch
 
 from dataset import DezfouliDataset
+import trainer
 from trainer import SplitTrainer
 from utils import get_num_embeddings, to_rdir
 
@@ -41,19 +42,25 @@ with open(config_rdir / "SplitTrainer.json", 'r') as f:
     trainer_config = json.load(f)
 if 'embedding_keys' in agent_config['model']['args']:
     agent_config['model']['args']['num_embeddings'] = get_num_embeddings(dataset, agent_config['model']['args']['embedding_keys'])
-trainer = SplitTrainer(**trainer_config['trainer'])
+split_trainer = SplitTrainer(**trainer_config['trainer'])
 print("Done!")
 print()
 
 print("Function test:")
 
 print("Train:")
-trainer.train(dataset, agent_config['model'], agent_config['training'], tensorboard_rdir = tensorboard_rdir, **trainer_config['training'])
+split_trainer.train(dataset, agent_config['model'], agent_config['training'], tensorboard_rdir = tensorboard_rdir, **trainer_config['training'])
 print("Done!")
 print()
 
 print("Save:")
 save_dir = save_rdir / trainer_config['trainer']['name']
-trainer.save(save_dir)
+split_trainer.save(save_dir)
+print("Done!")
+print()
+
+print("Load:")
+load_dir = save_dir
+new_split_trainer = trainer.load(load_dir)
 print("Done!")
 print()
