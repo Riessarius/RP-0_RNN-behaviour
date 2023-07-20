@@ -1,7 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import Tuple, Optional, Union
+import jsbeautifier, json
+from pathlib import Path
+from typing import Dict, Tuple, Optional, Union
 
 import torch
+
+import agent
 
 
 class Agent(ABC):
@@ -33,8 +37,8 @@ class Agent(ABC):
     This is an abstract class which must be implemented in the subclass.
     """
 
-    def __init__(self, name: Optional[str] = None, *args, **kwargs):
-        self._name = name
+    def __init__(self, config: Optional[Dict] = None, *args, **kwargs):
+        self._config = config if config is not None else {}
         pass
 
     def __call__(self, x: Union[torch.tensor, Tuple[torch.Tensor]]) -> torch.tensor:
@@ -64,7 +68,7 @@ class Agent(ABC):
             The name of the agent.
         """
 
-        return self._name
+        return self._config['name']
 
     @abstractmethod
     def train(self, *args, **kwargs) -> None:
@@ -115,18 +119,16 @@ class Agent(ABC):
 
         pass
 
-    @abstractmethod
-    def save(self, *args, **kwargs) -> None:
-        """
-        Save the agent.
+    def load(self, load_dir: Path, *args, **kwargs) -> None:
+        cfg_path = load_dir / f"config.json"
+        with cfg_path.open('r') as f:
+            self._config = json.load(f)
 
-        Notes
-        -----
-        This is an abstract method which must be implemented in the subclass.
+    def save(self, save_dir: Path, *args, **kwargs) -> None:
+        save_dir.mkdir(parents = True, exist_ok = True)
 
-        Returns
-        -------
-        None
-        """
-
-        pass
+        cfg_path = save_dir / f"config.json"
+        with cfg_path.open('w') as f:
+            opts = jsbeautifier.default_options()
+            opts.indent_size = 4
+            f.write(jsbeautifier.beautify(json.dumps(self._config), opts))

@@ -1,5 +1,4 @@
-import json
-import jsbeautifier
+import json, jsbeautifier
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from copy import deepcopy
@@ -50,11 +49,10 @@ class RNNAgent(Agent):
 
     def __init__(self, rnn_type: str, input_dim: int, rnn_dim: int, output_dim: int,
                  embedding_keys: Optional[List[str]] = None, num_embeddings: Optional[Tuple[int]] = None, embedding_dims: Optional[Tuple[int]] = None,
-                 name: Optional[str] = None, tensorboard_rdir: Optional[Path] = None, *args, **kwargs) -> None:
-        super().__init__(name, *args, **kwargs)
-        self._tensorboard_rdir = tensorboard_rdir
-        self._model = RNNModel(rnn_type, input_dim, rnn_dim, output_dim, num_embeddings, embedding_dims)
-        self._hyperparameters = {
+                 name: Optional[str] = None, device: str = 'cpu', tensorboard_rdir: Optional[Path] = None, *args, **kwargs) -> None:
+        config = {
+            'name': name,
+            'type': 'RNNAgent',
             'rnn_type': rnn_type,
             'input_dim': input_dim,
             'rnn_dim': rnn_dim,
@@ -62,10 +60,16 @@ class RNNAgent(Agent):
             'embedding_keys': embedding_keys,
             'num_embeddings': num_embeddings,
             'embedding_dims': embedding_dims,
+            'device': device,
         }
+        super().__init__(config, *args, **kwargs)
 
-    def train(self, train_set: Dataset, test_set: Dataset,
-              device: str = 'cpu', batch_size: Optional[int] = None, max_num_epoch: int = 1000, early_stopping: Optional[int] = None,
+        self._tensorboard_rdir = tensorboard_rdir
+        self._model = RNNModel(rnn_type, input_dim, rnn_dim, output_dim, num_embeddings, embedding_dims).to(device)
+        self._hyperparameters = {}
+
+    def train(self, train_set: Dataset, test_set: Dataset, device: Optional[str] = 'cpu',
+              batch_size: Optional[int] = None, max_num_epoch: int = 1000, early_stopping: Optional[int] = None,
               criterion: str = 'CrossEntropy', optimizer: str = 'SGD', lr: float = 0.01, weight_decay: float = 0.01,
               verbose_level: int = 0, *args, **kwargs) -> None:
         """
@@ -106,9 +110,9 @@ class RNNAgent(Agent):
         The criterion can be either 'CrossEntropy'.
         The optimizer can be either 'SGD' or 'AdamW'.
         """
-
+        if device is not None:
+            self._config['device'] = device
         self._hyperparameters |= {
-            'device': device,
             'batch_size': batch_size,
             'max_epochs': max_num_epoch,
             'early_stopping': early_stopping,
@@ -119,8 +123,8 @@ class RNNAgent(Agent):
             'verbose_level': verbose_level,
         }
 
-        _device = self._hyperparameters['device']
-        _embedding_keys = self._hyperparameters['embedding_keys']
+        device = self._config['device']
+        embedding_keys = self._config['embedding_keys']
 
         if criterion == 'CrossEntropy':
             criterion = nn.CrossEntropyLoss(reduction = 'none')
@@ -134,9 +138,10 @@ class RNNAgent(Agent):
         else:
             raise NotImplementedError
 
-        writer = SummaryWriter(str(self._tensorboard_rdir / self._name)) if self._tensorboard_rdir is not None and self._name is not None else None
+        writer = SummaryWriter(str(self._tensorboard_rdir / self._config['name'])) \
+            if self._tensorboard_rdir is not None and self._config['name'] is not None else None
 
-        model = self._model.to(_device)
+        model = self._model.to(device)
         best_loss = float('inf')
         early_stopping_counter = 0
         train_loader = torch_data.DataLoader(train_set, batch_size = batch_size, shuffle = False)
@@ -148,11 +153,11 @@ class RNNAgent(Agent):
             total_train_trials = 0
             with torch.enable_grad():
                 for i, data in enumerate(train_loader):
-                    x = data['input'].to(_device)
-                    y = data['output'].to(_device)
-                    m = data['mask'].to(_device)
-                    if _embedding_keys is not None:
-                        x = tuple([x, torch.stack([data[key] for key in self._hyperparameters['embedding_keys']]).transpose(0, 1).to(_device)])
+                    x = data['input'].to(device)
+                    y = data['output'].to(device)
+                    m = data['mask'].to(device)
+                    if embedding_keys is not None:
+                        x = tuple([x, torch.stack([data[key] for key in self._config['embedding_keys']]).transpose(0, 1).to(device)])
                     optimizer.zero_grad()
                     y_hat = model(x)
                     loss = (criterion(y_hat.flatten(end_dim = -2), y.flatten(end_dim = y_hat.dim() - 2)) * m.flatten()).sum() / m.flatten().sum()
@@ -169,11 +174,11 @@ class RNNAgent(Agent):
             total_test_trials = 0
             with torch.no_grad():
                 for i, data in enumerate(test_loader):
-                    x = data['input'].to(_device)
-                    y = data['output'].to(_device)
-                    m = data['mask'].to(_device)
-                    if _embedding_keys is not None:
-                        x = tuple([x, torch.stack([data[key] for key in self._hyperparameters['embedding_keys']]).transpose(0, 1).to(_device)])
+                    x = data['input'].to(device)
+                    y = data['output'].to(device)
+                    m = data['mask'].to(device)
+                    if embedding_keys is not None:
+                        x = tuple([x, torch.stack([data[key] for key in self._config['embedding_keys']]).transpose(0, 1).to(device)])
                     y_hat = model(x)
                     loss = (criterion(y_hat.flatten(end_dim = -2), y.flatten(end_dim = y_hat.dim() - 2)) * m.flatten()).sum() / m.flatten().sum()
                     total_test_loss += loss.item() * m.flatten().sum().item()
@@ -228,8 +233,8 @@ class RNNAgent(Agent):
         -----
         The _output will be a tensor of shape (pred_size, seq_len, output_dim).
         """
-        _device = self._hyperparameters['device']
-        _embedding_keys = self._hyperparameters['embedding_keys']
+        _device = self._config['device']
+        _embedding_keys = self._config['embedding_keys']
 
         pred_loader = torch_data.DataLoader(pred_set, batch_size = len(pred_set), shuffle = False)
         self._model.eval()
@@ -238,7 +243,7 @@ class RNNAgent(Agent):
             x = data['input'].to(_device)
             m = data['mask'].to(_device)
             if _embedding_keys is not None:
-                x = tuple([x, torch.stack([data[key] for key in self._hyperparameters['embedding_keys']]).transpose(0, 1).to(_device)])
+                x = tuple([x, torch.stack([data[key] for key in self._config['embedding_keys']]).transpose(0, 1).to(_device)])
             y_hat = self._model(x)  # type: torch.Tensor[batch, seq, _output]
             y_hat = y_hat * m.unsqueeze(-1)
         return y_hat
@@ -259,6 +264,33 @@ class RNNAgent(Agent):
 
         return self._model.get_internal_state()
 
+    def load(self, load_dir: Path, *args, **kwargs) -> None:
+        """
+        Load the agent, including model states and hyper-parameters.
+
+        Parameters
+        ----------
+        load_dir : Path
+            The directory to load the agent.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        The hyperparameters will be loaded from "hyperparameters.json".
+        The model will be loaded from "model.pt".
+        """
+        super().load(load_dir)
+
+        hp_path = load_dir / "hyperparameters.json"
+        with open(hp_path, 'r') as f:
+            self._hyperparameters = json.load(f)
+
+        model_path = load_dir / "model.pt"
+        self._model.load_state_dict(torch.load(model_path, map_location = self._config['device']))
+
     def save(self, save_dir: Path, *args, **kwargs) -> None:
         """
         Save the agent, including model states and hyper-parameters.
@@ -277,7 +309,7 @@ class RNNAgent(Agent):
         The hyperparameters will be saved as "hyperparameters.json".
         The model will be saved as "model.pt".
         """
-        save_dir.mkdir(parents = True, exist_ok = True)
+        super().save(save_dir)
 
         hp_path = save_dir / "hyperparameters.json"
         with open(hp_path, 'w') as f:

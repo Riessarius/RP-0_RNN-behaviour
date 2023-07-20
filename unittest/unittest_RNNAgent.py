@@ -5,6 +5,7 @@ from pathlib import Path
 import torch
 from torch.utils.data import random_split
 
+import agent
 from agent import RNNAgent
 from dataset import DezfouliDataset
 from utils import get_num_embeddings, to_rdir
@@ -41,13 +42,13 @@ with open(config_rdir / "RNNAgent.json", 'r') as f:
     agent_config = json.load(f)
 if 'embedding_keys' in agent_config['model']:
     agent_config['model']['num_embeddings'] = get_num_embeddings(dataset, agent_config['model']['embedding_keys'])
-agent = RNNAgent(tensorboard_rdir = tensorboard_rdir, **agent_config['model'])
+rnn_agent = RNNAgent(tensorboard_rdir = tensorboard_rdir, **agent_config['model'])
 print("Done!")
 print()
 
 print("Basic information:")
-print(f"RNN type: {agent._model._rnn_type}; ")
-print(f"Input dimension: {agent._model._input_dim}; Hidden dimension: {agent._model._hidden_dim}; Output dimension: {agent._model._output_dim}.\n")
+print(f"RNN type: {rnn_agent._model._rnn_type}; ")
+print(f"Input dimension: {rnn_agent._model._input_dim}; Hidden dimension: {rnn_agent._model._hidden_dim}; Output dimension: {rnn_agent._model._output_dim}.\n")
 print()
 
 print("Function test:")
@@ -57,24 +58,30 @@ train_size = len(dataset) - test_size
 train_set, test_set = random_split(dataset, [train_size, test_size])
 
 print("Train:")
-agent.train(train_set, test_set, **agent_config['training'])
+rnn_agent.train(train_set, test_set, **agent_config['training'])
 print("Done!")
 print()
 
 print("Predict:")
-output = agent.predict(test_set, **agent_config['training'])
+output = rnn_agent.predict(test_set, **agent_config['training'])
 print(output)
 print("Done!")
 print()
 
 print("Get Internal State:")
-internal_state = agent.get_internal_state()
+internal_state = rnn_agent.get_internal_state()
 print(internal_state)
 print("Done!")
 print()
 
 print("Save:")
 save_dir = save_rdir / agent_config['model']['name']
-agent.save(save_dir)
+rnn_agent.save(save_dir)
+print("Done!")
+print()
+
+print("Load:")
+load_dir = save_dir
+new_rnn_agent = agent.load(load_dir)
 print("Done!")
 print()
