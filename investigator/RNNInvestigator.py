@@ -26,7 +26,11 @@ class RNNInvestigator(Investigator):
         Investigate the agent.
     """
     def __init__(self, name: Optional[str] = None, *args, **kwargs) -> None:
-        super().__init__(name, *args, **kwargs)
+        config = {
+            'name': name,
+            'type': 'RNNInvestigator',
+        }
+        super().__init__(config, *args, **kwargs)
 
     def investigate(self, agents: List[Agent], dataset: Dataset,
                     *args, **kwargs) -> None:
@@ -45,7 +49,7 @@ class RNNInvestigator(Investigator):
         None
         """
         for ag in agents:
-            self._agent_names.append(ag.get_name())
+            self._agents.append(ag)
             mask = dataset.get_by_prop('mask')
             output = ag.predict(dataset)
             internal_state = ag.get_internal_state()

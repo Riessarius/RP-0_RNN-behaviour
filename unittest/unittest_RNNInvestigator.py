@@ -5,6 +5,7 @@ from pathlib import Path
 import torch
 
 from dataset import DezfouliDataset
+import investigator
 from investigator import RNNInvestigator
 from trainer import CVTrainer
 from utils import get_num_embeddings, to_rdir
@@ -52,7 +53,7 @@ trainer.train(dataset, agent_config['model'], agent_config['training'], tensorbo
 print("Creating investigator...")
 with open(config_rdir / "RNNInvestigator.json", 'r') as f:
     investigator_config = json.load(f)
-investigator = RNNInvestigator(**investigator_config['investigator'])
+rnn_investigator = RNNInvestigator(**investigator_config['investigator'])
 print("Done!")
 print()
 
@@ -60,12 +61,18 @@ print("Function test:")
 
 print("Investigate:")
 agents = trainer.agents
-investigator.investigate(agents, dataset)
+rnn_investigator.investigate(agents, dataset)
 print("Done!")
 print()
 
 print("Save:")
 save_dir = save_rdir / investigator_config['investigator']['name']
-investigator.save(save_dir)
+rnn_investigator.save(save_dir)
 print("Save finished.")
+print()
+
+print("Load:")
+load_dir = save_dir
+new_rnn_investigator = investigator.load(load_dir)
+print("Done!")
 print()
