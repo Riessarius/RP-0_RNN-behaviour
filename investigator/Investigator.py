@@ -82,7 +82,7 @@ class Investigator(ABC):
             f.write(jsbeautifier.beautify(json.dumps(self._config), opts))
 
         for i, (ag, info) in enumerate(zip(self._agents, self._info)):
-            agent_dir = save_dir / f"{self._agents[i].get_name()}_{self._config['name']}"
+            agent_dir = save_dir / f"{self._agents[i].name}_{self._config['name']}"
             agent_dir.mkdir(parents = True, exist_ok = True)
             ag.save(agent_dir)
 

@@ -63,13 +63,13 @@ print("Done!")
 print()
 
 print("Predict:")
-output = rnn_agent.predict(test_set, **agent_config['training'])
-print(output)
+output, loss = rnn_agent.predict(test_set, **agent_config['training'])
+print(f"Output: {output}; Loss: {loss}.")
 print("Done!")
 print()
 
 print("Get Internal State:")
-internal_state = rnn_agent.get_internal_state()
+internal_state = rnn_agent.internal_state
 print(internal_state)
 print("Done!")
 print()

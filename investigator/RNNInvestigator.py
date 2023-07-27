@@ -51,11 +51,12 @@ class RNNInvestigator(Investigator):
         for ag in agents:
             self._agents.append(ag)
             mask = dataset.get_by_prop('mask')
-            output = ag.predict(dataset)
-            internal_state = ag.get_internal_state()
+            output, loss = ag.predict(dataset)
+            internal_state = ag.internal_state
             info = {
                 'mask': mask,
                 'output': output,
+                'loss': loss,
                 'internal_state': internal_state,
             }
             self._info.append(info)

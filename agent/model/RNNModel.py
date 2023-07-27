@@ -37,6 +37,14 @@ class RNNModel(nn.Module):
     def __call__(self, x: Union[torch.Tensor, Tuple[torch.Tensor]], /) -> torch.tensor:
         return self.forward(x)
 
+    @property
+    def rnn_output(self) -> torch.tensor:
+        return self._rnn_output
+
+    @property
+    def final_rnn_state(self) -> torch.tensor:
+        return self._final_rnn_state
+
     def forward(self, x: Union[torch.Tensor, Tuple[torch.Tensor]], /) -> torch.tensor:
         if self._embeddings is not None:
             assert isinstance(x, tuple) and len(x) == 2, f"The input with embeddings must be a tuple of two tensors."
@@ -51,13 +59,6 @@ class RNNModel(nn.Module):
         o = self._lin(r)
         self._rnn_output, self._final_rnn_state = r, s
         return o
-
-    def get_internal_state(self) -> Tuple[torch.tensor, Any]:
-        internal_state = {
-            'rnn_output': self._rnn_output,
-            'final_rnn_state': self._final_rnn_state
-        }
-        return internal_state
 
     def reset(self) -> None:
         self._rnn_output = self._final_rnn_state = None

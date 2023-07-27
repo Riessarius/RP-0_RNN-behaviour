@@ -80,7 +80,7 @@ class Trainer(ABC):
                 ag = agent.load(agent_dir)
                 self._agents.append(ag)
 
-                agcfg_path = load_dir / f"{ag.get_name()}_config.json"
+                agcfg_path = load_dir / f"{ag.name}_config.json"
                 with agcfg_path.open('r') as f:
                     agcfg = json.load(f)
                 self._agent_configs.append(agcfg)
@@ -107,10 +107,10 @@ class Trainer(ABC):
             f.write(jsbeautifier.beautify(json.dumps(self._config), opts))
 
         for i, (ag, agcfg) in enumerate(zip(self._agents, self._agent_configs)):
-            agent_dir = save_dir / ag.get_name()
+            agent_dir = save_dir / ag.name
             ag.save(agent_dir)
 
-            agcfg_path = save_dir / f"{ag.get_name()}_config.json"
+            agcfg_path = save_dir / f"{ag.name}_config.json"
             with agcfg_path.open('w') as f:
                 opts = jsbeautifier.default_options()
                 opts.indent_size = 4

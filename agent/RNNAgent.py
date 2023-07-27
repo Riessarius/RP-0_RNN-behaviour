@@ -68,6 +68,14 @@ class RNNAgent(Agent):
         self._model = RNNModel(rnn_type, input_dim, rnn_dim, output_dim, num_embeddings, embedding_dims).to(device)
         self._hyperparameters = {}
 
+    @property
+    def internal_state(self) -> Dict[str, Any]:
+        internal_state = {
+            'rnn_output': self._model.rnn_output,
+            'final_rnn_state': self._model.final_rnn_state,
+        }
+        return internal_state
+
     def train(self, train_set: Dataset, test_set: Dataset, device: Optional[str] = 'cpu',
               batch_size: Optional[int] = None, max_num_epoch: int = 1000, early_stopping: Optional[int] = None,
               criterion: str = 'CrossEntropy', optimizer: str = 'SGD', lr: float = 0.01, weight_decay: float = 0.01,
@@ -215,7 +223,7 @@ class RNNAgent(Agent):
         if writer is not None:
             writer.close()
 
-    def predict(self, pred_set: torch_data.Dataset, *args, **kwargs) -> torch.tensor:
+    def predict(self, pred_set: torch_data.Dataset, criterion: str = 'CrossEntropy', *args, **kwargs) -> torch.tensor:
         """
         Predict the _output of the agent.
 
@@ -223,46 +231,39 @@ class RNNAgent(Agent):
         ----------
         pred_set : torch_data.Dataset
             The dataset to predict.
+        criterion : str, optional
+            The criterion to use. Default is 'CrossEntropy'.
 
         Returns
         -------
         torch.tensor
-            The _output of the agent.
+            The output of the agent.
 
         Notes
         -----
-        The _output will be a tensor of shape (pred_size, seq_len, output_dim).
+        The output will be a tensor of shape (pred_size, seq_len, output_dim).
         """
-        _device = self._config['device']
-        _embedding_keys = self._config['embedding_keys']
+        device = self._config['device']
+        embedding_keys = self._config['embedding_keys']
+
+        if criterion == 'CrossEntropy':
+            criterion = nn.CrossEntropyLoss(reduction = 'none')
+        else:
+            raise NotImplementedError
 
         pred_loader = torch_data.DataLoader(pred_set, batch_size = len(pred_set), shuffle = False)
         self._model.eval()
         with torch.no_grad():
-            data = next(iter(pred_loader))  # type: x: torch.Tensor[batch, seq, _input]; m: torch.Tensor[batch, seq]
-            x = data['input'].to(_device)
-            m = data['mask'].to(_device)
-            if _embedding_keys is not None:
-                x = tuple([x, torch.stack([data[key] for key in self._config['embedding_keys']]).transpose(0, 1).to(_device)])
-            y_hat = self._model(x)  # type: torch.Tensor[batch, seq, _output]
+            data = next(iter(pred_loader))  # type: x: torch.Tensor[batch, seq, input]; m: torch.Tensor[batch, seq]
+            x = data['input'].to(device)
+            y = data['output'].to(device)
+            m = data['mask'].to(device)
+            if embedding_keys is not None:
+                x = tuple([x, torch.stack([data[key] for key in self._config['embedding_keys']]).transpose(0, 1).to(device)])
+            y_hat = self._model(x)  # type: torch.Tensor[batch, seq, output]
+            loss = (criterion(y_hat.flatten(end_dim = -2), y.flatten(end_dim = y_hat.dim() - 2)) * m.flatten()).sum() / m.flatten().sum()
             y_hat = y_hat * m.unsqueeze(-1)
-        return y_hat
-
-    def get_internal_state(self, *args, **kwargs) -> Tuple[torch.tensor, Any]:
-        """
-        Get the internal state of the agent.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        Tuple[torch.tensor, Any]
-            The internal state of the agent.
-        """
-
-        return self._model.get_internal_state()
+        return y_hat, loss
 
     def load(self, load_dir: Path, *args, **kwargs) -> None:
         """

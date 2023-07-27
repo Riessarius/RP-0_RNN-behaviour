@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import jsbeautifier, json
 from pathlib import Path
-from typing import Dict, Tuple, Optional, Union
+from typing import Any, Dict, Tuple, Optional, Union
 
 import torch
 
@@ -56,9 +56,10 @@ class Agent(ABC):
             The _output tensor.
         """
 
-        return self.predict(x)
+        return self.predict(x)[0]
 
-    def get_name(self) -> Optional[str]:
+    @property
+    def name(self) -> Optional[str]:
         """
         Get the name of the agent.
 
@@ -69,6 +70,24 @@ class Agent(ABC):
         """
 
         return self._config['name']
+
+    @property
+    @abstractmethod
+    def internal_state(self) -> Dict[str, Any]:
+        """
+        Get the internal state of the agent.
+
+        Notes
+        -----
+        This is an abstract method which must be implemented in the subclass.
+
+        Returns
+        -------
+        Dict[str, Any]
+            The internal state of the agent.
+        """
+
+        pass
 
     @abstractmethod
     def train(self, *args, **kwargs) -> None:
@@ -87,23 +106,7 @@ class Agent(ABC):
         pass
 
     @abstractmethod
-    def get_internal_state(self, *args, **kwargs) -> None:
-        """
-        Get the internal state of the agent.
-
-        Notes
-        -----
-        This is an abstract method which must be implemented in the subclass.
-
-        Returns
-        -------
-        None
-        """
-
-        pass
-
-    @abstractmethod
-    def predict(self, *args, **kwargs) -> torch.tensor:
+    def predict(self, *args, **kwargs) -> Any:
         """
         Predict the _output of the agent.
 
