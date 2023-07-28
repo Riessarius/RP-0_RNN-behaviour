@@ -1,7 +1,7 @@
 from abc import ABC
 from copy import copy
 from functools import reduce
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch.utils.data as torch_data
@@ -49,6 +49,13 @@ class Dataset(ABC, torch_data.Dataset):
         Get the keys of the dataset.
         """
         return list(self._data.keys())
+
+    @property
+    def sub_indices(self) -> Optional[np.ndarray]:
+        """
+        Get the sub-indices of the dataset.
+        """
+        return self._sub_indices
 
     def __len__(self) -> int:
         return len(self._sub_indices) if self._sub_indices is not None else next(iter(self._data.values())).shape[0]
